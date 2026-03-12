@@ -440,10 +440,24 @@ input::placeholder{color:rgba(255,255,255,.25)}
 </script>
 
 <!-- Socket.IO Client CDN -->
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-// ─── Initialize app after Socket.IO is loaded ─────────────
-document.addEventListener('DOMContentLoaded', initApp);
+// Carga Socket.IO con fallback
+(function loadSocketIO() {
+  var s = document.createElement('script');
+  s.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+  s.onload = function() { if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp(); };
+  s.onerror = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js';
+    s2.onload = function() { if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp(); };
+    s2.onerror = function() { document.getElementById('conn-banner').style.display='block'; document.getElementById('conn-banner').textContent='❌ Error cargando Socket.IO. Recarga la página.'; };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+})();
+</script>
+<script>
+// ─── App code ─────────────────────────────────────────────
 
 
 // ════════════════════════════════════════════════════════════
@@ -545,8 +559,9 @@ function doGuest(){
 // ════════════════════════════════════════════════════════════
 //  LOBBY
 // ════════════════════════════════════════════════════════════
-function goLobby(){
+async function goLobby(){
   document.getElementById('lob-welcome').textContent=`👋 Hola, ${S.user.username}!`;
+  await loadTopics();
   show('lobby');
 }
 
@@ -556,19 +571,16 @@ function toggleCreate(){
   document.getElementById('create-panel').classList.toggle('open',createOpen);
   document.getElementById('create-toggle-btn').textContent=createOpen?'✖ Cancelar':'✨ Crear Lobby';
 }
-const TOPICS=[
-  {id:'prog', name:'Programación General', icon:'💻'},
-  {id:'html', name:'HTML',                 icon:'🌐'},
-  {id:'js',   name:'JavaScript',           icon:'⚡'},
-];
-(function renderTopics(){
-  document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
-    <div class="topic-card" onclick="selectTopic('${t.id}',this)">
-      <div class="topic-icon">${t.icon}</div>
-      <div class="topic-name">${t.name}</div>
+async function loadTopics(){
+  const {ok,data}=await api('/api/topics');
+  if(!ok) return;
+  document.getElementById('topic-grid').innerHTML=data.map(t=>`
+    <div class="topic-card" onclick="selectTopic(${t.id},this)">
+      <div class="topic-icon">${TCL[t.icon_code]||'🎯'}</div>
+      <div class="topic-name">${esc(t.name)}</div>
       <div class="topic-q">10 preguntas</div>
     </div>`).join('');
-})();
+}
 function selectTopic(id,card){
   document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
   card.classList.add('sel');
