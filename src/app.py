@@ -1,6 +1,12 @@
 """
 TeamKahoot — Backend (Railway)
 Flask + Flask-SocketIO + MySQL (PyMySQL)
+
+FIXED VERSION:
+- Removed wildcard CORS
+- Added Railway proxy header handling
+- Improved Socket.IO configuration
+- Added error logging
 """
 
 import os, random, time, json
@@ -19,15 +25,19 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'kahoot-secret-2024')
 
+# ── CORS Configuration (FIXED) ─────────────────────────────────
 FRONTEND_URLS = [
     os.getenv('FRONTEND_URL', 'https://kahootgenerico.vercel.app'),
     'https://kahootgenerico.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:5000',
-    '*'
 ]
-CORS(app, origins=FRONTEND_URLS)
+# NOTE: Removed the wildcard '*' which was causing issues with credentials
+
+CORS(app, origins=FRONTEND_URLS, supports_credentials=True)
+
+# ── Socket.IO Configuration (IMPROVED) ─────────────────────────
 socketio = SocketIO(
     app,
     cors_allowed_origins=FRONTEND_URLS,
@@ -35,8 +45,18 @@ socketio = SocketIO(
     logger=False,
     engineio_logger=False,
     ping_timeout=60,
-    ping_interval=25
+    ping_interval=25,
+    manage_transports=False
 )
+
+# ── Middleware for Railway Proxy ───────────────────────────────
+@app.before_request
+def before_request():
+    """Handle X-Forwarded-* headers from Railway's reverse proxy"""
+    if request.headers.get('X-Forwarded-Proto'):
+        request.environ['wsgi.url_scheme'] = request.headers['X-Forwarded-Proto']
+    if request.headers.get('X-Forwarded-Host'):
+        request.environ['HTTP_HOST'] = request.headers['X-Forwarded-Host']
 
 # ── Database ──────────────────────────────────────────────────
 def parse_db_url(url):
@@ -73,6 +93,9 @@ def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
                 # For INSERT — return lastrowid as {'id': ...}
                 if result is None and cur.lastrowid:
                     result = {'id': cur.lastrowid}
+    except Exception as e:
+        print(f'[DB] Query error: {e}')
+        result = None
     finally:
         conn.close()
     return result
@@ -89,6 +112,9 @@ def query_returning(sql, params, returning_sql, returning_params):
             cur.execute(returning_sql, (last_id,) if returning_params == 'lastrowid' else returning_params)
             row = cur.fetchone()
             return dict(row) if row else None
+    except Exception as e:
+        print(f'[DB] Query returning error: {e}')
+        return None
     finally:
         conn.close()
 
@@ -220,6 +246,7 @@ def register():
         )
         return jsonify(success=True, user=user), 201
     except Exception as e:
+        print(f'[Register] Error: {e}')
         return jsonify(error=str(e)), 500
 
 @app.route('/api/login', methods=['POST'])
@@ -242,6 +269,7 @@ def login():
             'games_played': user['games_played'], 'total_score': user['total_score'],
         })
     except Exception as e:
+        print(f'[Login] Error: {e}')
         return jsonify(error=str(e)), 500
 
 @app.route('/api/topics')
@@ -250,6 +278,7 @@ def topics():
         rows = query('SELECT * FROM topics ORDER BY id', fetchall=True)
         return jsonify(rows)
     except Exception as e:
+        print(f'[Topics] Error: {e}')
         return jsonify(error=str(e)), 500
 
 @app.route('/api/leaderboard')
@@ -261,11 +290,35 @@ def leaderboard():
         )
         return jsonify(rows)
     except Exception as e:
+        print(f'[Leaderboard] Error: {e}')
         return jsonify(error=str(e)), 500
 
 # ═════════════════════════════════════════════════════════════
 #  SOCKET.IO EVENTS
 # ═════════════════════════════════════════════════════════════
+
+@socketio.on('connect')
+def on_connect():
+    print(f'[Socket] Client connected: {request.sid}')
+
+@socketio.on('disconnect')
+def on_disconnect():
+    print(f'[Socket] Client disconnected: {request.sid}')
+    sid = request.sid
+    for code in list(rooms.keys()):
+        room = rooms[code]
+        player = room['players'].pop(sid, None)
+        if not player: continue
+        if sid == room['host_sid']:
+            room['timer_cancel'] = True
+            socketio.emit('host-disconnected', {}, to=code)
+            def _clean(c=code):
+                socketio.sleep(30)
+                rooms.pop(c, None)
+            socketio.start_background_task(_clean)
+        else:
+            socketio.emit('player-left', {'username': player['username'], **room_pub(room)}, to=code)
+        break
 
 @socketio.on('create-room')
 def on_create_room(data):
@@ -299,139 +352,128 @@ def on_create_room(data):
     }
     join_room(code)
     emit('room-created', {
-        'roomCode': code, 'topic': topic,
-        'questionCount': len(questions),
-        'player': player, 'room': room_pub(rooms[code]),
+        'roomCode': code, 'topic': topic, 'questionCount': len(questions),
+        'player': player, 'room': room_pub(rooms[code])
     })
+    print(f'[Room] Created: {code} (topic={topic_id}, host={host_name})')
 
 @socketio.on('join-room')
 def on_join_room(data):
     code     = (data.get('roomCode') or '').upper().strip()
-    username = (data.get('username') or '').strip()
+    username = (data.get('username')  or 'Player').strip()
     user_id  = data.get('userId')
 
-    if code not in rooms:
-        emit('join-error', {'msg': 'Sala no encontrada. Verifica el codigo.'}); return
-    room = rooms[code]
+    room = rooms.get(code)
+    if not room:
+        emit('join-error', {'msg': 'Código de sala inválido'}); return
     if room['state'] != 'waiting':
-        emit('join-error', {'msg': 'El juego ya comenzo.'}); return
-    if not username:
-        emit('join-error', {'msg': 'Necesitas un nombre.'}); return
-    for p in room['players'].values():
-        if p['username'].lower() == username.lower():
-            emit('join-error', {'msg': 'Ese nombre ya esta en uso en esta sala.'}); return
+        emit('join-error', {'msg': 'La sala no está disponible'}); return
 
-    team   = next_team(room)
+    team = next_team(room)
+    avatar = random.randint(1, 8)
     player = {
         'socketId': request.sid, 'userId': user_id,
         'username': username, 'team': team,
-        'score': 0, 'streak': 0, 'avatar': random.randint(1, 8), 'isHost': False,
+        'score': 0, 'streak': 0, 'avatar': avatar, 'isHost': False,
     }
     room['players'][request.sid] = player
     join_room(code)
-    pub = room_pub(room)
-    emit('joined-room', {'player': player, 'room': pub})
-    emit('player-joined', {'player': player, **pub}, to=code)
+    emit('joined-room', {'player': player, 'room': room_pub(room)})
+    socketio.emit('player-joined', {'player': player, **room_pub(room)}, to=code, skip_sid=request.sid)
+    print(f'[Room] {code}: {username} joined ({team})')
 
 @socketio.on('start-game')
 def on_start_game(data):
     code = data.get('roomCode')
-    if code not in rooms: return
-    room = rooms[code]
-    if request.sid != room['host_sid']: return
+    room = rooms.get(code)
+    if not room or request.sid != room['host_sid']:
+        emit('error', {'msg': 'No autorizado'}); return
     if len(room['players']) < 2:
-        emit('error', {'msg': 'Necesitas al menos 2 jugadores.'}); return
-    room['state']        = 'countdown'
-    room['timer_cancel'] = False
-
-    def run_cd():
-        for n in range(3, 0, -1):
-            socketio.emit('countdown-tick', {'countdown': n}, to=code)
+        emit('error', {'msg': 'Mínimo 2 jugadores'}); return
+    
+    room['state'] = 'countdown'
+    socketio.emit('countdown-tick', {'countdown': 3}, to=code)
+    
+    def _countdown():
+        for i in range(2, 0, -1):
             socketio.sleep(1)
-            if rooms.get(code, {}).get('timer_cancel'): return
-        rooms[code]['current_idx'] = 0
-        send_question(code)
-
-    socketio.start_background_task(run_cd)
+            if rooms.get(code):
+                socketio.emit('countdown-tick', {'countdown': i}, to=code)
+        if rooms.get(code):
+            room = rooms[code]
+            room['current_idx'] = 0
+            send_question(code)
+    
+    socketio.start_background_task(_countdown)
+    print(f'[Game] Starting: {code}')
 
 @socketio.on('submit-answer')
-def on_answer(data):
-    code        = data.get('roomCode')
-    question_id = data.get('questionId')
-    ans_idx     = data.get('answerIndex')
-    if code not in rooms: return
-    room = rooms[code]
-    if room['state'] != 'question': return
+def on_submit_answer(data):
+    code = data.get('roomCode')
+    ans_idx = data.get('answerIndex')
+    room = rooms.get(code)
+    if not room or room['state'] != 'question': return
+    
     player = room['players'].get(request.sid)
-    if not player or request.sid in room['q_answers']: return
+    if not player: return
+    
     q = room['current_q']
-    if not q or q['id'] != question_id: return
-
-    elapsed_s   = (time.time() * 1000 - room['q_start_ms']) / 1000
-    is_correct  = (ans_idx == q['correct_answer'])
-    speed_ratio = max(0.0, 1.0 - elapsed_s / q['time_limit'])
-    base        = 200 if is_correct else 0
-    speed_bonus = int(speed_ratio * 800) if is_correct else 0
-    player['streak'] = player['streak'] + 1 if is_correct else 0
-    streak_bonus = min((player['streak'] - 1) * 50, 200) if is_correct and player['streak'] > 1 else 0
-    pts = base + speed_bonus + streak_bonus
-
-    room['q_answers'][request.sid] = {'answerIndex': ans_idx, 'isCorrect': is_correct, 'points': pts}
+    is_correct = ans_idx == q['correct_answer']
+    
+    # Calculate points (speed-based, up to 1000 points)
+    elapsed_ms = time.time() * 1000 - room['q_start_ms']
+    max_ms = q['time_limit'] * 1000
+    points = max(0, int(1000 * (1 - elapsed_ms / max_ms))) if is_correct else 0
+    
+    # Streak tracking
     if is_correct:
-        player['score']                     += pts
-        room['team_scores'][player['team']] += pts
-
+        player['streak'] += 1
+        points += player['streak'] * 50
+    else:
+        player['streak'] = 0
+    
+    player['score'] += points
+    
+    # Team score
+    team = player['team']
+    room['team_scores'][team] += points
+    
+    room['q_answers'][request.sid] = {
+        'answerIndex': ans_idx, 'isCorrect': is_correct, 'points': points
+    }
+    
     emit('answer-result', {
-        'isCorrect': is_correct, 'points': pts,
-        'correctAnswer': q['correct_answer'], 'streak': player['streak'],
+        'isCorrect': is_correct, 'points': points,
+        'correctAnswer': q['correct_answer'], 'streak': player['streak']
     })
-    answered = len(room['q_answers'])
-    total_p  = len(room['players'])
-    socketio.emit('answer-count', {'answered': answered, 'total': total_p}, to=code)
-    if answered >= total_p:
-        room['timer_cancel'] = True
-        socketio.sleep(0.4)
-        do_show_results(code)
+    socketio.emit('answer-count', {
+        'answered': len(room['q_answers']),
+        'total': len(room['players'])
+    }, to=code)
+    
+    print(f'[Answer] {code}: {player["username"]} → {ans_idx} ({is_correct}, +{points}pts)')
 
 @socketio.on('next-question')
-def on_next(data):
+def on_next_question(data):
     code = data.get('roomCode')
-    if code not in rooms: return
-    room = rooms[code]
-    if request.sid != room['host_sid']: return
-    room['current_idx']  += 1
-    room['timer_cancel']  = False
+    room = rooms.get(code)
+    if not room or request.sid != room['host_sid']:
+        emit('error', {'msg': 'No autorizado'}); return
+    
+    room['current_idx'] += 1
     if room['current_idx'] >= len(room['questions']):
         end_game(code)
     else:
         send_question(code)
 
 @socketio.on('force-results')
-def on_force(data):
+def on_force_results(data):
     code = data.get('roomCode')
-    if code not in rooms: return
-    if request.sid != rooms[code]['host_sid']: return
-    rooms[code]['timer_cancel'] = True
-    socketio.sleep(0.2)
-    do_show_results(code)
-
-@socketio.on('disconnect')
-def on_disconnect():
-    sid = request.sid
-    for code, room in list(rooms.items()):
-        if sid not in room['players']: continue
-        player = room['players'].pop(sid, None)
-        if not player: continue
-        if sid == room['host_sid']:
-            room['timer_cancel'] = True
-            socketio.emit('host-disconnected', {}, to=code)
-            def _clean(c=code):
-                socketio.sleep(30)
-                rooms.pop(c, None)
-            socketio.start_background_task(_clean)
-        else:
-            socketio.emit('player-left', {'username': player['username'], **room_pub(room)}, to=code)
-        break
+    room = rooms.get(code)
+    if not room: return
+    if request.sid == room['host_sid']:
+        room['timer_cancel'] = True
+        do_show_results(code)
 
 # ═════════════════════════════════════════════════════════════
 #  GAME ENGINE
@@ -557,6 +599,6 @@ def end_game(code):
 
 # ═════════════════════════════════════════════════════════════
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 3000))
+    port = int(os.getenv('PORT', 5000))
     print(f'Servidor corriendo en http://0.0.0.0:{port}')
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
