@@ -2,10 +2,6 @@
   "version": 2,
   "routes": [
     {
-      "src": "/socket.io/(.*)",
-      "dest": "https://kahootgenerico-production.up.railway.app/socket.io/$1"
-    },
-    {
       "src": "/api/(.*)",
       "dest": "https://kahootgenerico-production.up.railway.app/api/$1"
     },
