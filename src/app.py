@@ -134,11 +134,11 @@ def next_team(room):
 def serve_index():
     return send_from_directory(os.path.dirname(__file__), 'index.html')
 
-@app.route('/<path:path>')
-def serve_spa(path):
-    """Serve index.html for all non-API routes (SPA routing)"""
-    if path.startswith('api/') or path.startswith('socket.io'):
-        return 'Not Found', 404
+@app.errorhandler(404)
+def not_found(e):
+    """SPA routing: serve index.html for all non-existent routes (except API)"""
+    if request.path.startswith('/api/'):
+        return jsonify(error='Not Found'), 404
     return send_from_directory(os.path.dirname(__file__), 'index.html')
 
 @app.route('/api/health')
