@@ -74,7 +74,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
 .err{color:#ff6b6b;font-size:.82rem;font-weight:700;margin-top:6px;display:none}
 .err.on{display:block}
 
-/* LOBBY */  
+/* LOBBY */
 .lobby-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
 .code-big{background:var(--s2);border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
   padding:16px;color:#fff;font-family:'Boogaloo',cursive;font-size:2.2rem;
@@ -498,12 +498,23 @@ function setErr(id,msg){
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function fmt(n){return(n||0).toLocaleString()}
 
-// API helper — points at Railway backend
+// API helper — points at Railway backend (FIXED: added credentials)
 async function api(path,body=null){
-  const opts={headers:{'Content-Type':'application/json'}};
+  const opts={
+    headers:{'Content-Type':'application/json'},
+    credentials:'include'  // IMPORTANT: Include cookies/credentials
+  };
   if(body){opts.method='POST';opts.body=JSON.stringify(body);}
-  const r=await fetch(BACKEND_URL+path,opts);
-  return {ok:r.ok,data:await r.json()};
+  try{
+    const r=await fetch(BACKEND_URL+path,opts);
+    if(!r.ok){
+      console.error(`[API] Error [${r.status}] ${path}:`,await r.text());
+    }
+    return {ok:r.ok,data:await r.json()};
+  }catch(e){
+    console.error('[API] Fetch error:',e);
+    return {ok:false,data:{error:e.message}};
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -590,23 +601,33 @@ function joinRoom(){
 }
 
 // ════════════════════════════════════════════════════════════
-//  SOCKET — initialized after Socket.IO script loads
+//  SOCKET — initialized after Socket.IO script loads (FIXED)
 // ════════════════════════════════════════════════════════════
 function initApp(){
+  console.log('[Socket] Initializing connection to', BACKEND_URL);
+  
   S.socket = io(BACKEND_URL, {
-    transports: ['polling'],
+    transports: ['websocket', 'polling'],  // FIXED: Try WebSocket first, fallback to polling
     reconnection: true,
     reconnectionDelay: 1000,
-    reconnectionAttempts: 10
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 10,
+    forceNew: true,
+    rejectUnauthorized: false  // For development/self-signed certs
   });
   const banner=document.getElementById('conn-banner');
 
-  S.socket.on('connect',    ()=>{ banner.style.display='none'; });
-  S.socket.on('disconnect', ()=>{
+  S.socket.on('connect',    ()=>{ 
+    console.log('[Socket] ✅ Connected! SID:',S.socket.id);
+    banner.style.display='none'; 
+  });
+  S.socket.on('disconnect', (reason)=>{
+    console.log('[Socket] ❌ Disconnected. Reason:',reason);
     banner.style.display='block';
     banner.textContent='🔄 Reconectando con el servidor...';
   });
-  S.socket.on('connect_error', ()=>{
+  S.socket.on('connect_error', (error)=>{
+    console.error('[Socket] Connection error:',error);
     banner.style.display='block';
     banner.textContent='❌ Sin conexión al servidor. Reintentando...';
   });
