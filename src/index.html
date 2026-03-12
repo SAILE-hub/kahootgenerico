@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#080818"/>
+<title>TeamKahoot</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080818;--s1:#10102a;--s2:#181838;--s3:#20204a;
+  --txt:#fff;--dim:rgba(255,255,255,.5);--dim2:rgba(255,255,255,.08);
+  --ta:#00d4ff;--tb:#ff4f6a;
+  --ca:#e21b3c;--cb:#1368ce;--cc:#d89e00;--cd:#26890c;
+  --gold:#ffd700;--grn:#00e676;--red:#ff4757;--pur:#a855f7;
+  --r:14px;--r2:22px;--sh:0 8px 40px rgba(0,0,0,.5)
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--txt);
+  font-family:'Nunito',sans-serif;overflow-x:hidden}
+
+#bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.pt{position:absolute;border-radius:50%;opacity:.12;animation:pt-rise linear infinite}
+@keyframes pt-rise{0%{transform:translateY(105vh) rotate(0)}100%{transform:translateY(-5vh) rotate(360deg)}}
+
+.sc{display:none;min-height:100vh;flex-direction:column;align-items:center;
+  justify-content:center;padding:20px 16px;position:relative;z-index:1;
+  animation:fadein .32s ease both}
+.sc.on{display:flex}
+@keyframes fadein{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.logo{font-family:'Boogaloo',cursive;font-size:clamp(2rem,6vw,3rem);letter-spacing:1px;
+  background:linear-gradient(135deg,#00d4ff,#a855f7,#ff4f6a);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-s{font-size:.75rem;font-weight:800;color:var(--dim);letter-spacing:3px;
+  text-transform:uppercase;margin-top:-4px}
+
+.card{background:var(--s1);border:1px solid var(--dim2);border-radius:var(--r2);
+  padding:28px 24px;width:100%;max-width:440px;box-shadow:var(--sh)}
+.card-title{font-family:'Boogaloo',cursive;font-size:1.4rem;margin-bottom:18px;text-align:center}
+
+.tabs{display:flex;background:var(--s2);border-radius:var(--r);padding:4px;gap:4px;margin-bottom:22px}
+.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--dim);
+  border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;
+  transition:all .18s}
+.tab.on{background:var(--bg);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+label{font-size:.73rem;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+input{background:var(--s2);border:1.5px solid rgba(255,255,255,.09);border-radius:var(--r);
+  padding:12px 15px;color:#fff;font-family:'Nunito',sans-serif;font-size:1rem;outline:none;transition:.2s}
+input:focus{border-color:var(--pur)}
+input::placeholder{color:rgba(255,255,255,.25)}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;
+  border:none;border-radius:var(--r);cursor:pointer;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:1rem;transition:all .16s;width:100%;margin-top:4px}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.bp{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff}
+.bp:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,58,237,.45)}
+.bc{background:linear-gradient(135deg,#0891b2,#06b6d4);color:#fff}
+.bc:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(6,182,212,.4)}
+.bg_{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff}
+.bg_:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(34,197,94,.4)}
+.br{background:linear-gradient(135deg,#9f1239,#e11d48);color:#fff}
+.br:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(225,29,72,.4)}
+.bgh{background:transparent;border:1.5px solid rgba(255,255,255,.13);color:var(--dim)}
+.bgh:hover:not(:disabled){border-color:rgba(255,255,255,.32);color:#fff}
+
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--dim);font-size:.82rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--dim2)}
+
+.err{color:#ff6b6b;font-size:.82rem;font-weight:700;margin-top:6px;display:none}
+.err.on{display:block}
+
+/* LOBBY */
+.lobby-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
+.code-big{background:var(--s2);border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
+  padding:16px;color:#fff;font-family:'Boogaloo',cursive;font-size:2.2rem;
+  text-align:center;letter-spacing:8px;text-transform:uppercase;width:100%;outline:none;transition:.2s}
+.code-big:focus{border-color:var(--ta)}
+
+.create-panel{background:var(--s1);border:1px solid var(--dim2);border-radius:var(--r2);
+  overflow:hidden;transition:max-height .4s ease,opacity .35s ease;max-height:0;opacity:0;pointer-events:none}
+.create-panel.open{max-height:800px;opacity:1;pointer-events:all}
+.create-inner{padding:22px 20px}
+.create-title{font-family:'Boogaloo',cursive;font-size:1.3rem;margin-bottom:16px;text-align:center;color:var(--gold)}
+
+.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.topic-card{background:var(--s2);border:2px solid rgba(255,255,255,.06);border-radius:16px;
+  padding:14px 10px;cursor:pointer;text-align:center;transition:all .18s}
+.topic-card:hover{transform:translateY(-3px);border-color:var(--pur)}
+.topic-card.sel{border-color:var(--gold);box-shadow:0 0 18px rgba(255,215,0,.15);
+  background:linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,215,0,.03))}
+.topic-icon{font-size:2rem;margin-bottom:6px}
+.topic-name{font-family:'Boogaloo',cursive;font-size:.9rem;line-height:1.2}
+.topic-q{font-size:.7rem;color:var(--dim);font-weight:700;margin-top:4px}
+.topic-card.sel::after{content:'✓';position:absolute;top:6px;right:8px;font-size:.75rem;font-weight:800;color:var(--gold)}
+.topic-card{position:relative}
+
+/* WAITING */
+.wait-header{text-align:center;margin-bottom:22px}
+.code-badge{display:inline-block;background:var(--s2);border:2px dashed rgba(255,255,255,.15);
+  border-radius:var(--r);padding:8px 22px;font-family:'Boogaloo',cursive;font-size:2rem;
+  letter-spacing:7px;margin-bottom:8px}
+.topic-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,.15);
+  border:1px solid rgba(168,85,247,.3);border-radius:999px;padding:5px 14px;font-size:.82rem;font-weight:800}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:600px}
+.tcol{background:var(--s1);border-radius:var(--r2);padding:14px;border-top:4px solid transparent}
+.tcol.a{border-color:var(--ta)}.tcol.b{border-color:var(--tb)}
+.tcol-title{font-family:'Boogaloo',cursive;font-size:1.1rem;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between}
+.tcol-title.a{color:var(--ta)}.tcol-title.b{color:var(--tb)}
+.tcol-n{background:var(--s2);border-radius:999px;padding:2px 8px;font-size:.72rem;font-weight:800}
+.pi{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;
+  background:var(--s2);margin-bottom:5px;animation:fadein .3s ease}
+.pi .pn{font-weight:700;font-size:.85rem;flex:1}
+.pulse{animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+/* COUNTDOWN */
+#sc-countdown{background:radial-gradient(ellipse at center,#1a0840 0%,var(--bg) 70%)}
+.cd-num{font-family:'Boogaloo',cursive;font-size:clamp(8rem,28vw,15rem);
+  background:linear-gradient(135deg,var(--pur),var(--ta));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:pop .65s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* QUESTION */
+#sc-question{padding:0;justify-content:flex-start}
+.q-head{width:100%;background:var(--s1);border-bottom:1px solid var(--dim2);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.q-cnt{font-family:'Boogaloo',cursive;font-size:1rem;color:var(--dim);white-space:nowrap}
+.scores-hud{display:flex;gap:8px;align-items:center;flex:1;justify-content:center}
+.sh-team{display:flex;flex-direction:column;align-items:center}
+.sh-team .lbl{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.sh-team .val{font-family:'Boogaloo',cursive;font-size:1.15rem}
+.sh-team.a .lbl{color:var(--ta)}.sh-team.a .val{color:var(--ta)}
+.sh-team.b .lbl{color:var(--tb)}.sh-team.b .val{color:var(--tb)}
+.sh-vs{font-size:1rem;color:var(--dim)}
+.t-num{font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--gold);min-width:28px;text-align:right}
+.t-bar{width:100%;height:7px;background:rgba(255,255,255,.08)}
+.t-fill{height:100%;background:linear-gradient(90deg,var(--grn),#ffbe00,var(--red));
+  transition:width 1s linear;width:100%}
+.q-body{width:100%;max-width:800px;margin:0 auto;padding:18px 14px;display:flex;flex-direction:column;gap:14px;flex:1}
+.q-txt{background:var(--s1);border-radius:var(--r2);padding:22px 20px;
+  font-family:'Boogaloo',cursive;font-size:clamp(1.2rem,4vw,1.8rem);
+  text-align:center;line-height:1.4;box-shadow:var(--sh)}
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans{display:flex;align-items:center;gap:10px;padding:14px 16px;border:none;
+  border-radius:var(--r);cursor:pointer;color:#fff;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:clamp(.82rem,2.5vw,1rem);text-align:left;
+  transition:.14s;min-height:62px;position:relative;overflow:hidden}
+.ans:active:not(:disabled){transform:scale(.97)}
+.ans:disabled{cursor:default}
+.ans.sel{outline:4px solid #fff;transform:scale(.97)}
+.ans.ok{outline:4px solid var(--grn);animation:ok-flash .5s ease}
+.ans.ng{opacity:.38}
+@keyframes ok-flash{0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,.35)}50%{box-shadow:0 0 0 14px rgba(0,230,118,0)}}
+.ans-a{background:var(--ca)}.ans-b{background:var(--cb)}.ans-c{background:var(--cc)}.ans-d{background:var(--cd)}
+.ans-ico{width:34px;height:34px;border-radius:7px;background:rgba(0,0,0,.22);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.ans-txt{flex:1}
+.host-bar{width:100%;max-width:800px;margin:0 auto 14px;padding:0 14px}
+
+/* ANSWERED */
+#sc-answered{background:radial-gradient(ellipse at center,#001a0a 0%,var(--bg) 70%)}
+.ans-icon-big{font-size:5rem;animation:pop .55s cubic-bezier(.34,1.56,.64,1)}
+.pts-big{font-family:'Boogaloo',cursive;font-size:3.5rem;color:var(--gold);
+  animation:slidein .5s .18s both}
+@keyframes slidein{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.streak-pill{display:inline-block;background:linear-gradient(135deg,#f59e0b,#ef4444);
+  border-radius:999px;padding:4px 16px;font-weight:800;font-size:.88rem;
+  margin-top:6px;animation:slidein .5s .35s both}
+.prog-wrap{width:260px;max-width:88%;height:7px;background:rgba(255,255,255,.08);
+  border-radius:999px;margin-top:14px;overflow:hidden}
+.prog-fill{height:100%;background:var(--grn);border-radius:999px;transition:width .4s ease}
+.wait-lbl{color:var(--dim);font-size:.88rem;font-weight:700;margin-top:8px}
+
+/* RESULTS */
+.res-correct{display:inline-flex;align-items:center;gap:8px;background:rgba(0,230,118,.1);
+  border:2px solid rgba(0,230,118,.3);border-radius:var(--r);padding:10px 18px;
+  font-weight:800;color:var(--grn);margin-bottom:14px;animation:fadein .4s ease}
+.team-sb{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;width:100%;max-width:480px}
+.tsb{background:var(--s1);border-radius:var(--r);padding:14px;text-align:center;border-top:4px solid transparent}
+.tsb.a{border-color:var(--ta)}.tsb.b{border-color:var(--tb)}
+.tsb .tn{font-family:'Boogaloo',cursive;font-size:.95rem}
+.tsb.a .tn{color:var(--ta)}.tsb.b .tn{color:var(--tb)}
+.tsb .tv{font-family:'Boogaloo',cursive;font-size:2rem}
+.podium{width:100%;max-width:480px}
+.pod-item{display:flex;align-items:center;gap:10px;background:var(--s1);border-radius:11px;
+  padding:9px 13px;margin-bottom:7px;animation:fadein .3s ease both}
+.pod-rank{font-family:'Boogaloo',cursive;font-size:1.2rem;width:26px;text-align:center}
+.pod-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.pod-name{flex:1;font-weight:700;font-size:.88rem}
+.chip-ok{background:rgba(0,230,118,.13);color:var(--grn);border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:800}
+.chip-ng{background:rgba(255,71,87,.13);color:var(--red);border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:800}
+.pod-score{font-family:'Boogaloo',cursive;font-size:1.05rem;color:var(--gold)}
+.next-lbl{color:var(--dim);font-size:.82rem;font-weight:700;margin-top:10px;text-align:center}
+
+/* GAME OVER */
+#sc-gameover{background:radial-gradient(ellipse at 50% 0%,#280f60 0%,var(--bg) 65%)}
+.go-trophy{font-size:5rem;animation:pop .8s cubic-bezier(.34,1.56,.64,1)}
+.go-winner{font-family:'Boogaloo',cursive;font-size:clamp(2rem,7vw,3.5rem);
+  color:var(--gold);text-shadow:0 0 28px rgba(255,215,0,.4);animation:fadein .5s .2s both}
+.go-sub{color:var(--dim);font-size:.95rem;font-weight:700;animation:fadein .5s .4s both}
+.go-scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:380px;margin:20px 0}
+.gsc{background:var(--s1);border-radius:var(--r2);padding:18px;text-align:center;
+  border-top:4px solid transparent;animation:fadein .5s .5s both}
+.gsc.a{border-color:var(--ta)}.gsc.b{border-color:var(--tb)}
+.gsc .gl{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.gsc.a .gl{color:var(--ta)}.gsc.b .gl{color:var(--tb)}
+.gsc .gv{font-family:'Boogaloo',cursive;font-size:2.4rem}
+.gsc.winner{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,215,0,.03));
+  border-color:var(--gold)!important;box-shadow:0 0 22px rgba(255,215,0,.15)}
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden}
+.cf{position:absolute;animation:cf-fall linear forwards}
+@keyframes cf-fall{0%{opacity:1;transform:translateY(-10px) rotate(0)}
+  100%{opacity:0;transform:translateY(105vh) rotate(720deg)}}
+
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);
+  background:#1a1a3a;border:1px solid rgba(255,255,255,.1);border-radius:var(--r);
+  padding:11px 20px;font-weight:700;font-size:.88rem;z-index:9999;display:none;
+  animation:fadein .22s ease;box-shadow:var(--sh);max-width:92vw;text-align:center}
+
+/* Offline/connecting banner */
+#conn-banner{position:fixed;top:0;left:0;right:0;background:#7c3aed;
+  padding:8px;text-align:center;font-weight:800;font-size:.85rem;z-index:10000;
+  display:none;animation:fadein .2s ease}
+
+@media(max-width:480px){
+  .ans-grid{grid-template-columns:1fr}
+  .teams{grid-template-columns:1fr}
+  .topic-grid{grid-template-columns:1fr}
+  .go-scores{grid-template-columns:1fr}
+  .q-txt{font-size:1.15rem;padding:16px}
+  .code-big{font-size:1.6rem;letter-spacing:5px}
+}
+@media(min-width:700px){
+  .ans{font-size:1.05rem;min-height:74px}
+}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="toast"></div>
+<div id="conn-banner">🔄 Reconectando con el servidor...</div>
+<div class="confetti-wrap" id="confetti"></div>
+
+<!-- AUTH -->
+<div class="sc on" id="sc-auth">
+  <div style="text-align:center;margin-bottom:26px">
+    <div class="logo">🎮 TeamKahoot</div>
+    <div class="logo-s">Juego en equipo · Tiempo real</div>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab on" onclick="swTab('login')">Iniciar sesión</button>
+      <button class="tab"    onclick="swTab('register')">Registrarse</button>
+    </div>
+    <div id="t-login">
+      <div class="fg"><label>Correo electrónico</label>
+        <input type="email" id="l-email" placeholder="tu@email.com" autocomplete="email"
+          onkeypress="if(event.key==='Enter')doLogin()"/></div>
+      <div class="fg"><label>Contraseña</label>
+        <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"
+          onkeypress="if(event.key==='Enter')doLogin()"/></div>
+      <div class="err" id="l-err"></div>
+      <button class="btn bp" onclick="doLogin()">🚀 Entrar</button>
+      <div class="divider">o continúa sin cuenta</div>
+      <button class="btn bgh" onclick="swTab('guest')">👤 Jugar como invitado</button>
+    </div>
+    <div id="t-register" style="display:none">
+      <div class="fg"><label>Nombre de usuario</label>
+        <input type="text" id="r-name" placeholder="TuNombre" maxlength="50" autocomplete="username"/></div>
+      <div class="fg"><label>Correo electrónico</label>
+        <input type="email" id="r-email" placeholder="tu@email.com" autocomplete="email"/></div>
+      <div class="fg"><label>Contraseña</label>
+        <input type="password" id="r-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/></div>
+      <div class="err" id="r-err"></div>
+      <button class="btn bp" onclick="doRegister()">✅ Crear cuenta</button>
+    </div>
+    <div id="t-guest" style="display:none">
+      <div class="fg"><label>¿Cómo te llamas?</label>
+        <input type="text" id="g-name" placeholder="NombreJugador" maxlength="40"
+          onkeypress="if(event.key==='Enter')doGuest()"/></div>
+      <div class="err" id="g-err"></div>
+      <button class="btn bc" onclick="doGuest()">🎮 Continuar</button>
+      <button class="btn bgh" style="margin-top:8px" onclick="swTab('login')">← Volver</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOBBY -->
+<div class="sc" id="sc-lobby">
+  <div style="text-align:center;margin-bottom:22px">
+    <div class="logo">🎮 TeamKahoot</div>
+    <p id="lob-welcome" style="color:var(--dim);margin-top:6px;font-weight:700;font-size:.9rem"></p>
+  </div>
+  <div class="lobby-wrap">
+    <div class="card" style="padding:22px 20px">
+      <div class="card-title">🚪 Unirse a una sala</div>
+      <input class="code-big" type="text" id="join-code" placeholder="XXXXXX"
+        maxlength="6" oninput="this.value=this.value.toUpperCase()"
+        onkeypress="if(event.key==='Enter')joinRoom()"/>
+      <div class="err" id="join-err"></div>
+      <button class="btn bc" onclick="joinRoom()" style="margin-top:12px">Entrar →</button>
+    </div>
+    <div class="divider">o</div>
+    <button class="btn bp" id="create-toggle-btn" onclick="toggleCreate()">✨ Crear Lobby</button>
+    <div class="create-panel" id="create-panel">
+      <div class="create-inner">
+        <div class="create-title">🎯 Elige el tema de la sala</div>
+        <div class="topic-grid" id="topic-grid"></div>
+        <div class="err" id="create-err"></div>
+        <button class="btn bg_" id="create-btn" onclick="createRoom()" disabled>🚀 Crear sala</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WAITING -->
+<div class="sc" id="sc-waiting">
+  <div class="wait-header">
+    <div class="logo" style="font-size:1.7rem">🎮 TeamKahoot</div>
+    <div style="margin:10px 0 6px"><div class="code-badge" id="w-code">──────</div></div>
+    <div><span class="topic-pill" id="w-topic">📚 Tema</span></div>
+    <p style="color:var(--dim);font-size:.8rem;margin-top:6px">Comparte este código con tus amigos</p>
+  </div>
+  <div class="teams" id="teams-wrap">
+    <div class="tcol a">
+      <div class="tcol-title a">⚡ Equipo A <span class="tcol-n" id="cnt-a">0</span></div>
+      <div id="list-a"></div>
+    </div>
+    <div class="tcol b">
+      <div class="tcol-title b">🔥 Equipo B <span class="tcol-n" id="cnt-b">0</span></div>
+      <div id="list-b"></div>
+    </div>
+  </div>
+  <div id="host-start-wrap" style="display:none;margin-top:16px;width:100%;max-width:320px">
+    <button class="btn bg_" id="start-btn" onclick="startGame()" disabled>▶ Iniciar juego</button>
+    <p style="color:var(--dim);font-size:.75rem;text-align:center;margin-top:8px">Mínimo 2 jugadores</p>
+  </div>
+  <p class="pulse" id="wait-msg" style="color:var(--dim);font-weight:700;margin-top:18px;font-size:.85rem">
+    ⏳ Esperando al anfitrión...
+  </p>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="sc" id="sc-countdown">
+  <p style="color:var(--dim);font-weight:800;margin-bottom:6px;font-size:1rem">¡Prepararse!</p>
+  <div class="cd-num" id="cd-num">3</div>
+</div>
+
+<!-- QUESTION -->
+<div class="sc" id="sc-question" style="padding:0;justify-content:flex-start">
+  <div class="q-head">
+    <span class="q-cnt" id="q-cnt">1/10</span>
+    <div class="scores-hud">
+      <div class="sh-team a"><span class="lbl">Eq.A</span><span class="val" id="h-a">0</span></div>
+      <span class="sh-vs">⚔️</span>
+      <div class="sh-team b"><span class="lbl">Eq.B</span><span class="val" id="h-b">0</span></div>
+    </div>
+    <span class="t-num" id="t-num">20</span>
+  </div>
+  <div class="t-bar"><div class="t-fill" id="t-fill"></div></div>
+  <div class="q-body">
+    <div class="q-txt" id="q-txt">Cargando...</div>
+    <div class="ans-grid">
+      <button class="ans ans-a" id="ans-0" onclick="submitAnswer(0)">
+        <div class="ans-ico">▲</div><span class="ans-txt"></span></button>
+      <button class="ans ans-b" id="ans-1" onclick="submitAnswer(1)">
+        <div class="ans-ico">◆</div><span class="ans-txt"></span></button>
+      <button class="ans ans-c" id="ans-2" onclick="submitAnswer(2)">
+        <div class="ans-ico">●</div><span class="ans-txt"></span></button>
+      <button class="ans ans-d" id="ans-3" onclick="submitAnswer(3)">
+        <div class="ans-ico">■</div><span class="ans-txt"></span></button>
+    </div>
+  </div>
+  <div class="host-bar" id="host-q-bar" style="display:none">
+    <button class="btn br" onclick="forceResults()">⏹ Ver resultados ahora</button>
+  </div>
+</div>
+
+<!-- ANSWERED -->
+<div class="sc" id="sc-answered">
+  <div class="ans-icon-big" id="ai-big">✅</div>
+  <div class="pts-big" id="pts-big">+0 pts</div>
+  <div class="streak-pill" id="streak-pill" style="display:none">🔥 RACHA ×2</div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <p class="wait-lbl" id="ans-wait">Esperando a otros jugadores...</p>
+  <div id="host-ans-bar" style="display:none;margin-top:18px;width:100%;max-width:300px">
+    <button class="btn br" onclick="forceResults()">⏹ Ver resultados ahora</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="sc" id="sc-results">
+  <div style="text-align:center;margin-bottom:14px">
+    <div class="logo" style="font-size:1.3rem">📊 Resultados</div>
+  </div>
+  <div class="res-correct">✅ Respuesta: <strong id="r-correct">—</strong></div>
+  <div class="team-sb">
+    <div class="tsb a"><div class="tn">⚡ Equipo A</div><div class="tv" id="rs-a">0</div></div>
+    <div class="tsb b"><div class="tn">🔥 Equipo B</div><div class="tv" id="rs-b">0</div></div>
+  </div>
+  <div class="podium" id="podium"></div>
+  <div id="host-res-bar" style="display:none;margin-top:14px;width:100%;max-width:340px">
+    <button class="btn bc" id="next-q-btn" onclick="nextQuestion()">Siguiente pregunta →</button>
+  </div>
+  <p class="next-lbl pulse" id="next-lbl">⏳ Esperando al anfitrión...</p>
+</div>
+
+<!-- GAME OVER -->
+<div class="sc" id="sc-gameover">
+  <div class="go-trophy" id="go-trophy">🏆</div>
+  <div class="go-winner" id="go-winner">—</div>
+  <div class="go-sub"    id="go-sub">—</div>
+  <div class="go-scores">
+    <div class="gsc a" id="gsc-a"><div class="gl">⚡ Equipo A</div><div class="gv" id="gs-a">0</div></div>
+    <div class="gsc b" id="gsc-b"><div class="gl">🔥 Equipo B</div><div class="gv" id="gs-b">0</div></div>
+  </div>
+  <div style="width:100%;max-width:460px;margin-bottom:22px">
+    <p style="font-family:'Boogaloo',cursive;font-size:1.3rem;text-align:center;margin-bottom:12px">🥇 Clasificación Final</p>
+    <div class="podium" id="go-podium"></div>
+  </div>
+  <button class="btn bp" style="max-width:320px" onclick="goLobby()">🔄 Jugar de nuevo</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--  ⚙️  CONFIGURA ESTA URL CON TU DOMINIO DE RAILWAY       -->
+<!--  Ejemplo: https://teamkahoot-production.up.railway.app  -->
+<!-- ════════════════════════════════════════════════════════ -->
+<script>
+  const BACKEND_URL = "https://TU-APP.up.railway.app";
+</script>
+
+<!-- Socket.IO se carga DESDE el backend de Railway -->
+<script id="sio-script"></script>
+<script>
+// ─── Load Socket.IO from backend, then start app ─────────────
+(function loadSocketIO() {
+  const s = document.getElementById('sio-script');
+  s.src = BACKEND_URL + '/socket.io/socket.io.js';
+  s.onload  = initApp;
+  s.onerror = () => {
+    document.getElementById('conn-banner').style.display = 'block';
+    document.getElementById('conn-banner').textContent =
+      '❌ No se pudo conectar al servidor. Verifica que BACKEND_URL sea correcto.';
+  };
+})();
+
+// ════════════════════════════════════════════════════════════
+//  ICONS / CONSTANTS
+// ════════════════════════════════════════════════════════════
+const AV  = ['🦊','🐯','🦁','🐧','🦅','🐬','🦋','🐉'];
+const TCL = {1:'🌍',2:'🔬',3:'🎬'};
+const ANI = ['▲','◆','●','■'];
+const TC  = {A:'var(--ta)',B:'var(--tb)'};
+
+// ════════════════════════════════════════════════════════════
+//  PARTICLES
+// ════════════════════════════════════════════════════════════
+(()=>{
+  const w=document.getElementById('bg');
+  const cols=['#7c3aed','#00d4ff','#ff4f6a','#ffd700','#22c55e'];
+  for(let i=0;i<16;i++){
+    const d=document.createElement('div'),sz=8+Math.random()*18;
+    d.className='pt';
+    Object.assign(d.style,{width:sz+'px',height:sz+'px',left:Math.random()*100+'%',
+      background:cols[i%cols.length],
+      animationDuration:(9+Math.random()*12)+'s',
+      animationDelay:(-Math.random()*12)+'s'});
+    w.appendChild(d);
+  }
+})();
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+const S = {socket:null,user:null,room:null,player:null,
+           question:null,answered:false,isHost:false,teamScores:{A:0,B:0}};
+
+// ════════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════════
+function show(id){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sc-'+id).classList.add('on');
+  window.scrollTo(0,0);
+}
+function toast(msg,ms=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms);
+}
+function setErr(id,msg){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'),4000);
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmt(n){return(n||0).toLocaleString()}
+
+// API helper — points at Railway backend
+async function api(path,body=null){
+  const opts={headers:{'Content-Type':'application/json'}};
+  if(body){opts.method='POST';opts.body=JSON.stringify(body);}
+  const r=await fetch(BACKEND_URL+path,opts);
+  return {ok:r.ok,data:await r.json()};
+}
+
+// ════════════════════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════════════════════
+function swTab(t){
+  ['login','register','guest'].forEach(x=>document.getElementById('t-'+x).style.display='none');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['login','register'][i]===t));
+  document.getElementById('t-'+t).style.display='block';
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════════
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pass =document.getElementById('l-pass').value;
+  if(!email||!pass){setErr('l-err','Completa todos los campos');return}
+  const {ok,data}=await api('/api/login',{email,password:pass});
+  if(!ok){setErr('l-err',data.error||'Error');return}
+  S.user=data.user; goLobby();
+}
+async function doRegister(){
+  const username=document.getElementById('r-name').value.trim();
+  const email   =document.getElementById('r-email').value.trim();
+  const pass    =document.getElementById('r-pass').value;
+  if(!username||!email||!pass){setErr('r-err','Completa todos los campos');return}
+  const {ok,data}=await api('/api/register',{username,email,password:pass});
+  if(!ok){setErr('r-err',data.error||'Error');return}
+  S.user=data.user;toast('✅ Cuenta creada!');goLobby();
+}
+function doGuest(){
+  const n=document.getElementById('g-name').value.trim();
+  if(!n||n.length<2){setErr('g-err','Pon al menos 2 caracteres');return}
+  S.user={id:null,username:n,avatar:Math.floor(Math.random()*8)+1};
+  goLobby();
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOBBY
+// ════════════════════════════════════════════════════════════
+async function goLobby(){
+  document.getElementById('lob-welcome').textContent=`👋 Hola, ${S.user.username}!`;
+  await loadTopics();
+  show('lobby');
+}
+
+let createOpen=false, selectedTopic=null;
+function toggleCreate(){
+  createOpen=!createOpen;
+  document.getElementById('create-panel').classList.toggle('open',createOpen);
+  document.getElementById('create-toggle-btn').textContent=createOpen?'✖ Cancelar':'✨ Crear Lobby';
+}
+async function loadTopics(){
+  const {ok,data}=await api('/api/topics');
+  if(!ok) return;
+  document.getElementById('topic-grid').innerHTML=data.map(t=>`
+    <div class="topic-card" onclick="selectTopic(${t.id},this)">
+      <div class="topic-icon">${TCL[t.icon_code]||'🎯'}</div>
+      <div class="topic-name">${esc(t.name)}</div>
+      <div class="topic-q">10 preguntas</div>
+    </div>`).join('');
+}
+function selectTopic(id,card){
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
+  card.classList.add('sel');
+  selectedTopic=id;
+  document.getElementById('create-btn').disabled=false;
+}
+function createRoom(){
+  if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
+  S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
+}
+function joinRoom(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  if(code.length!==6){setErr('join-err','El código debe tener 6 caracteres');return}
+  document.getElementById('join-err').classList.remove('on');
+  S.socket.emit('join-room',{roomCode:code,username:S.user.username,userId:S.user.id});
+}
+
+// ════════════════════════════════════════════════════════════
+//  SOCKET — initialized after Socket.IO script loads
+// ════════════════════════════════════════════════════════════
+function initApp(){
+  S.socket = io(BACKEND_URL, {transports:['websocket','polling']});
+  const banner=document.getElementById('conn-banner');
+
+  S.socket.on('connect',    ()=>{ banner.style.display='none'; });
+  S.socket.on('disconnect', ()=>{
+    banner.style.display='block';
+    banner.textContent='🔄 Reconectando con el servidor...';
+  });
+  S.socket.on('connect_error', ()=>{
+    banner.style.display='block';
+    banner.textContent='❌ Sin conexión al servidor. Reintentando...';
+  });
+
+  S.socket.on('room-created',({roomCode,topic,questionCount,player,room})=>{
+    S.player=player;S.room=room;S.isHost=true;
+    setWaitRoom(room,true);
+    show('waiting');
+    toast(`✅ Sala ${roomCode} creada — ${questionCount} preguntas`);
+  });
+  S.socket.on('joined-room',({player,room})=>{
+    S.player=player;S.room=room;S.isHost=false;
+    setWaitRoom(room,false);
+    show('waiting');
+  });
+  S.socket.on('join-error',({msg})=>setErr('join-err',msg));
+  S.socket.on('player-joined',(d)=>{ updateTeams(d); toast(`👤 ${d.player.username} → Equipo ${d.player.team}`); });
+  S.socket.on('player-left',  (d)=>{ updateTeams(d); toast(`❌ ${d.username} abandonó`); });
+
+  S.socket.on('countdown-tick',({countdown})=>{
+    const el=document.getElementById('cd-num');
+    el.textContent=countdown;
+    el.style.animation='none';void el.offsetWidth;
+    el.style.animation='pop .65s cubic-bezier(.34,1.56,.64,1)';
+    show('countdown');
+  });
+  S.socket.on('new-question',({question,questionNumber,totalQuestions,teamScores})=>{
+    S.question=question;S.answered=false;S.teamScores=teamScores||{A:0,B:0};
+    renderQuestion(question,questionNumber,totalQuestions,teamScores);
+    show('question');
+  });
+  S.socket.on('timer-tick',({timeLeft,total})=>{
+    document.getElementById('t-num').textContent=timeLeft;
+    document.getElementById('t-num').style.color=timeLeft<=5?'var(--red)':'var(--gold)';
+    document.getElementById('t-fill').style.width=Math.max(0,timeLeft/total*100)+'%';
+  });
+  S.socket.on('answer-result',({isCorrect,points,correctAnswer,streak})=>{
+    showAnswered(isCorrect,points,streak);
+  });
+  S.socket.on('answer-count',({answered,total})=>{
+    document.getElementById('prog-fill').style.width=(answered/total*100)+'%';
+    document.getElementById('ans-wait').textContent=`${answered}/${total} respondieron`;
+  });
+  S.socket.on('question-results',(d)=>{ S.teamScores=d.teamScores; renderResults(d); show('results'); });
+  S.socket.on('game-over',       (d)=>{ renderGameOver(d); show('gameover'); launchConfetti(); });
+  S.socket.on('host-disconnected',()=>toast('⚠️ El anfitrión se desconectó.',5000));
+  S.socket.on('error',({msg})=>toast('❌ '+msg,4000));
+}
+
+// ════════════════════════════════════════════════════════════
+//  WAITING ROOM
+// ════════════════════════════════════════════════════════════
+function setWaitRoom(room,isHost){
+  document.getElementById('w-code').textContent=room.code;
+  const t=room.topic;
+  document.getElementById('w-topic').textContent=`${TCL[t.icon_code]||'🎯'} ${t.name}`;
+  renderTeams(room.teamA||[],room.teamB||[]);
+  document.getElementById('host-start-wrap').style.display=isHost?'block':'none';
+  document.getElementById('wait-msg').style.display=isHost?'none':'block';
+  toggleHostUI(isHost);
+  updateStartBtn(room.players||[]);
+}
+function updateTeams(d){ renderTeams(d.teamA||[],d.teamB||[]); updateStartBtn(d.players||[]); }
+function renderTeams(a,b){
+  document.getElementById('cnt-a').textContent=a.length;
+  document.getElementById('cnt-b').textContent=b.length;
+  const tpl=p=>`<div class="pi">
+    <span style="font-size:1.1rem">${AV[(p.avatar-1)||0]}</span>
+    <span class="pn">${esc(p.username)}${p.socketId===S.player?.socketId?' (Tú)':''}</span>
+    ${p.isHost?'<span title="Anfitrión">👑</span>':''}
+  </div>`;
+  const none='<p style="color:var(--dim);font-size:.78rem;text-align:center">Sin jugadores</p>';
+  document.getElementById('list-a').innerHTML=a.length?a.map(tpl).join(''):none;
+  document.getElementById('list-b').innerHTML=b.length?b.map(tpl).join(''):none;
+}
+function updateStartBtn(players){
+  const btn=document.getElementById('start-btn');
+  if(btn) btn.disabled=players.length<2;
+}
+function toggleHostUI(isHost){
+  ['host-q-bar','host-ans-bar','host-res-bar'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=isHost?'block':'none';
+  });
+}
+function startGame(){ S.socket.emit('start-game',{roomCode:S.room.code}); }
+
+// ════════════════════════════════════════════════════════════
+//  QUESTION
+// ════════════════════════════════════════════════════════════
+function renderQuestion(q,num,total,scores){
+  document.getElementById('q-cnt').textContent=`${num}/${total}`;
+  document.getElementById('h-a').textContent=fmt(scores?.A||0);
+  document.getElementById('h-b').textContent=fmt(scores?.B||0);
+  document.getElementById('q-txt').textContent=q.question_text;
+  document.getElementById('t-num').textContent=q.time_limit;
+  document.getElementById('t-num').style.color='var(--gold)';
+  document.getElementById('t-fill').style.width='100%';
+  [0,1,2,3].forEach(i=>{
+    const b=document.getElementById('ans-'+i);
+    b.querySelector('.ans-txt').textContent=q.options[i]||'—';
+    b.querySelector('.ans-ico').textContent=ANI[i];
+    b.disabled=false; b.classList.remove('sel','ok','ng'); b.style.opacity='1';
+  });
+}
+function submitAnswer(idx){
+  if(S.answered||!S.question) return;
+  S.answered=true;
+  document.getElementById('ans-'+idx).classList.add('sel');
+  [0,1,2,3].forEach(i=>document.getElementById('ans-'+i).disabled=true);
+  S.socket.emit('submit-answer',{roomCode:S.room.code,questionId:S.question.id,answerIndex:idx});
+}
+function showAnswered(isCorrect,points,streak){
+  document.getElementById('ai-big').textContent=isCorrect?'✅':'❌';
+  document.getElementById('pts-big').textContent=isCorrect?'+'+fmt(points)+' pts':'Sin puntos';
+  document.getElementById('pts-big').style.color=isCorrect?'var(--gold)':'var(--red)';
+  const sp=document.getElementById('streak-pill');
+  if(streak>1){sp.textContent=`🔥 RACHA ×${streak}`;sp.style.display='inline-block';}
+  else sp.style.display='none';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('ans-wait').textContent='Esperando a otros jugadores...';
+  show('answered');
+}
+function forceResults(){ S.socket.emit('force-results',{roomCode:S.room.code}); }
+
+// ════════════════════════════════════════════════════════════
+//  RESULTS
+// ════════════════════════════════════════════════════════════
+function renderResults(data){
+  document.getElementById('r-correct').textContent=data.correctAnswerText;
+  document.getElementById('rs-a').textContent=fmt(data.teamScores.A);
+  document.getElementById('rs-b').textContent=fmt(data.teamScores.B);
+  const icons=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  document.getElementById('podium').innerHTML=
+    (data.playerResults||[]).slice(0,5).map((p,i)=>`
+      <div class="pod-item">
+        <span class="pod-rank">${icons[i]||i+1}</span>
+        <div class="pod-dot" style="background:${TC[p.team]}"></div>
+        <span class="pod-name">${esc(p.username)}</span>
+        <span class="${p.isCorrect?'chip-ok':'chip-ng'}">${p.isCorrect?'✓ +'+fmt(p.points):'✗'}</span>
+        <span class="pod-score">${fmt(p.totalScore)}</span>
+      </div>`).join('');
+  if(S.isHost){
+    document.getElementById('next-q-btn').textContent=
+      data.isLastQuestion?'Mostrar resultados finales →'
+      :`Siguiente (${data.questionNumber+1}/${data.totalQuestions}) →`;
+    document.getElementById('next-lbl').style.display='none';
+  } else {
+    document.getElementById('next-lbl').style.display='block';
+  }
+}
+function nextQuestion(){ S.socket.emit('next-question',{roomCode:S.room.code}); }
+
+// ════════════════════════════════════════════════════════════
+//  GAME OVER
+// ════════════════════════════════════════════════════════════
+function renderGameOver(data){
+  const {winner,teamScores,playerResults=[]}=data;
+  let trophy='🤝',wt='¡Empate!',sub='Buen juego de ambos equipos';
+  if(winner==='A'){trophy='🏆';wt='¡Equipo A Gana!';sub='⚡ Dominaron la partida'}
+  if(winner==='B'){trophy='🏆';wt='¡Equipo B Gana!';sub='🔥 Dominaron la partida'}
+  if(S.player&&winner===S.player.team) sub='🎉 ¡Eres parte del equipo ganador!';
+  document.getElementById('go-trophy').textContent=trophy;
+  document.getElementById('go-winner').textContent=wt;
+  document.getElementById('go-sub').textContent=sub;
+  document.getElementById('gs-a').textContent=fmt(teamScores.A);
+  document.getElementById('gs-b').textContent=fmt(teamScores.B);
+  document.getElementById('gsc-a').classList.toggle('winner',winner==='A');
+  document.getElementById('gsc-b').classList.toggle('winner',winner==='B');
+  const icons=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+  document.getElementById('go-podium').innerHTML=playerResults.slice(0,8).map((p,i)=>`
+    <div class="pod-item">
+      <span class="pod-rank">${icons[i]||i+1}</span>
+      <div class="pod-dot" style="background:${TC[p.team]}"></div>
+      <span style="font-size:1.1rem">${AV[(p.avatar-1)||0]}</span>
+      <span class="pod-name">${esc(p.username)}${p.isHost?' 👑':''}</span>
+      <span class="pod-score">${fmt(p.score)}</span>
+    </div>`).join('');
+}
+function launchConfetti(){
+  const w=document.getElementById('confetti');w.innerHTML='';
+  const cols=['#ffd700','#00d4ff','#ff4f6a','#a855f7','#22c55e','#f59e0b'];
+  for(let i=0;i<90;i++){
+    const d=document.createElement('div');d.className='cf';const sz=5+Math.random()*10;
+    Object.assign(d.style,{left:Math.random()*100+'%',top:'-12px',width:sz+'px',height:sz+'px',
+      background:cols[Math.floor(Math.random()*cols.length)],
+      borderRadius:Math.random()>.5?'50%':'2px',
+      animationDuration:(2+Math.random()*3.5)+'s',
+      animationDelay:(Math.random()*2.5)+'s'});
+    w.appendChild(d);
+  }
+  setTimeout(()=>w.innerHTML='',9000);
+}
+function goLobby(){
+  S.room=null;S.player=null;S.isHost=false;S.answered=false;
+  selectedTopic=null;createOpen=false;
+  document.getElementById('create-panel').classList.remove('open');
+  document.getElementById('create-toggle-btn').textContent='✨ Crear Lobby';
+  document.getElementById('create-btn').disabled=true;
+  document.getElementById('join-code').value='';
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
+  show('lobby');
+}
+</script>
+</body>
+</html>
