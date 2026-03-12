@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "public": "src",
   "routes": [
     {
       "src": "/socket.io/(.*)",
