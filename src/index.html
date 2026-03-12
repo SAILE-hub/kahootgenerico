@@ -566,9 +566,10 @@ async function loadTopics(){
   grid.innerHTML='<p style="color:var(--dim);font-size:.82rem;text-align:center;grid-column:1/-1">⏳ Cargando temas...</p>';
   const {ok,data}=await api('/api/topics');
   if(!ok||!Array.isArray(data)||!data.length){
-    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center">
-      <p style="color:var(--red);font-size:.85rem;margin-bottom:10px">❌ No se pudieron cargar los temas.<br><small style="color:var(--dim)">${data?.error||'Error de conexión'}</small></p>
-      <button class="btn bc" style="max-width:180px" onclick="loadTopics()">🔄 Reintentar</button>
+    const msg=(data&&data.error)?data.error:'Sin respuesta del servidor';
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:10px">
+      <p style="color:var(--red);font-size:.85rem;margin-bottom:12px">❌ Error: ${msg}</p>
+      <button class="btn bc" style="max-width:200px" onclick="loadTopics()">🔄 Reintentar</button>
     </div>`;
     return;
   }
