@@ -500,14 +500,10 @@ function fmt(n){return(n||0).toLocaleString()}
 
 // API helper — points at Railway backend
 async function api(path,body=null){
-  try{
-    const opts={headers:{'Content-Type':'application/json'}};
-    if(body){opts.method='POST';opts.body=JSON.stringify(body);}
-    const r=await fetch(BACKEND_URL+path,opts);
-    return {ok:r.ok,data:await r.json()};
-  }catch(e){
-    return {ok:false,data:{error:e.message}};
-  }
+  const opts={headers:{'Content-Type':'application/json'}};
+  if(body){opts.method='POST';opts.body=JSON.stringify(body);}
+  const r=await fetch(BACKEND_URL+path,opts);
+  return {ok:r.ok,data:await r.json()};
 }
 
 // ════════════════════════════════════════════════════════════
@@ -549,9 +545,8 @@ function doGuest(){
 // ════════════════════════════════════════════════════════════
 //  LOBBY
 // ════════════════════════════════════════════════════════════
-async function goLobby(){
+function goLobby(){
   document.getElementById('lob-welcome').textContent=`👋 Hola, ${S.user.username}!`;
-  await loadTopics();
   show('lobby');
 }
 
@@ -561,25 +556,19 @@ function toggleCreate(){
   document.getElementById('create-panel').classList.toggle('open',createOpen);
   document.getElementById('create-toggle-btn').textContent=createOpen?'✖ Cancelar':'✨ Crear Lobby';
 }
-async function loadTopics(){
-  const grid=document.getElementById('topic-grid');
-  grid.innerHTML='<p style="color:var(--dim);font-size:.82rem;text-align:center;grid-column:1/-1">⏳ Cargando temas...</p>';
-  const {ok,data}=await api('/api/topics');
-  if(!ok||!Array.isArray(data)||!data.length){
-    const msg=(data&&data.error)?data.error:'Sin respuesta del servidor';
-    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:10px">
-      <p style="color:var(--red);font-size:.85rem;margin-bottom:12px">❌ Error: ${msg}</p>
-      <button class="btn bc" style="max-width:200px" onclick="loadTopics()">🔄 Reintentar</button>
-    </div>`;
-    return;
-  }
-  grid.innerHTML=data.map(t=>`
-    <div class="topic-card" onclick="selectTopic(${t.id},this)">
-      <div class="topic-icon">${TCL[t.icon_code]||'🎯'}</div>
-      <div class="topic-name">${esc(t.name)}</div>
+const TOPICS=[
+  {id:'prog', name:'Programación General', icon:'💻'},
+  {id:'html', name:'HTML',                 icon:'🌐'},
+  {id:'js',   name:'JavaScript',           icon:'⚡'},
+];
+(function renderTopics(){
+  document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
+    <div class="topic-card" onclick="selectTopic('${t.id}',this)">
+      <div class="topic-icon">${t.icon}</div>
+      <div class="topic-name">${t.name}</div>
       <div class="topic-q">10 preguntas</div>
     </div>`).join('');
-}
+})();
 function selectTopic(id,card){
   document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
   card.classList.add('sel');
@@ -588,7 +577,6 @@ function selectTopic(id,card){
 }
 function createRoom(){
   if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
-  if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento.');return}
   S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
 }
 function joinRoom(){
