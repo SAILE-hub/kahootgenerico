@@ -500,10 +500,14 @@ function fmt(n){return(n||0).toLocaleString()}
 
 // API helper — points at Railway backend
 async function api(path,body=null){
-  const opts={headers:{'Content-Type':'application/json'}};
-  if(body){opts.method='POST';opts.body=JSON.stringify(body);}
-  const r=await fetch(BACKEND_URL+path,opts);
-  return {ok:r.ok,data:await r.json()};
+  try{
+    const opts={headers:{'Content-Type':'application/json'}};
+    if(body){opts.method='POST';opts.body=JSON.stringify(body);}
+    const r=await fetch(BACKEND_URL+path,opts);
+    return {ok:r.ok,data:await r.json()};
+  }catch(e){
+    return {ok:false,data:{error:e.message}};
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -558,9 +562,17 @@ function toggleCreate(){
   document.getElementById('create-toggle-btn').textContent=createOpen?'✖ Cancelar':'✨ Crear Lobby';
 }
 async function loadTopics(){
+  const grid=document.getElementById('topic-grid');
+  grid.innerHTML='<p style="color:var(--dim);font-size:.82rem;text-align:center;grid-column:1/-1">⏳ Cargando temas...</p>';
   const {ok,data}=await api('/api/topics');
-  if(!ok) return;
-  document.getElementById('topic-grid').innerHTML=data.map(t=>`
+  if(!ok||!Array.isArray(data)||!data.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center">
+      <p style="color:var(--red);font-size:.85rem;margin-bottom:10px">❌ No se pudieron cargar los temas.<br><small style="color:var(--dim)">${data?.error||'Error de conexión'}</small></p>
+      <button class="btn bc" style="max-width:180px" onclick="loadTopics()">🔄 Reintentar</button>
+    </div>`;
+    return;
+  }
+  grid.innerHTML=data.map(t=>`
     <div class="topic-card" onclick="selectTopic(${t.id},this)">
       <div class="topic-icon">${TCL[t.icon_code]||'🎯'}</div>
       <div class="topic-name">${esc(t.name)}</div>
@@ -575,6 +587,7 @@ function selectTopic(id,card){
 }
 function createRoom(){
   if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
+  if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento.');return}
   S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
 }
 function joinRoom(){
