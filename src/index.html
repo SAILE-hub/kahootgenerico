@@ -439,20 +439,12 @@ input::placeholder{color:rgba(255,255,255,.25)}
     : 'https://kahootgenerico-production.up.railway.app';
 </script>
 
-<!-- Socket.IO se carga DESDE el backend de Railway -->
-<script id="sio-script"></script>
+<!-- Socket.IO Client CDN -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-// ─── Load Socket.IO from backend, then start app ─────────────
-(function loadSocketIO() {
-  const s = document.getElementById('sio-script');
-  s.src = BACKEND_URL + '/socket.io/socket.io.js';
-  s.onload  = initApp;
-  s.onerror = () => {
-    document.getElementById('conn-banner').style.display = 'block';
-    document.getElementById('conn-banner').textContent =
-      '❌ No se pudo conectar al servidor. Verifica que BACKEND_URL sea correcto.';
-  };
-})();
+// ─── Initialize app after Socket.IO is loaded ─────────────
+document.addEventListener('DOMContentLoaded', initApp);
+
 
 // ════════════════════════════════════════════════════════════
 //  ICONS / CONSTANTS
