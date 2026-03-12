@@ -441,194 +441,381 @@ input::placeholder{color:rgba(255,255,255,.25)}
 
 <!-- Socket.IO Client CDN -->
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
 <script>
-// ────────────────────────────────────────────────────────────
-// IMPROVED API HELPER (FIXED)
-// ────────────────────────────────────────────────────────────
-async function api(path, body = null) {
-  const opts = {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include'  // IMPORTANT: Include cookies/credentials
-  };
-  
-  if (body) {
-    opts.method = 'POST';
-    opts.body = JSON.stringify(body);
+// ─── Initialize app after Socket.IO is loaded ─────────────
+document.addEventListener('DOMContentLoaded', initApp);
+
+
+// ════════════════════════════════════════════════════════════
+//  ICONS / CONSTANTS
+// ════════════════════════════════════════════════════════════
+const AV  = ['🦊','🐯','🦁','🐧','🦅','🐬','🦋','🐉'];
+const TCL = {1:'🌍',2:'🔬',3:'🎬'};
+const ANI = ['▲','◆','●','■'];
+const TC  = {A:'var(--ta)',B:'var(--tb)'};
+
+// ════════════════════════════════════════════════════════════
+//  PARTICLES
+// ════════════════════════════════════════════════════════════
+(()=>{
+  const w=document.getElementById('bg');
+  const cols=['#7c3aed','#00d4ff','#ff4f6a','#ffd700','#22c55e'];
+  for(let i=0;i<16;i++){
+    const d=document.createElement('div'),sz=8+Math.random()*18;
+    d.className='pt';
+    Object.assign(d.style,{width:sz+'px',height:sz+'px',left:Math.random()*100+'%',
+      background:cols[i%cols.length],
+      animationDuration:(9+Math.random()*12)+'s',
+      animationDelay:(-Math.random()*12)+'s'});
+    w.appendChild(d);
   }
-  
-  try {
-    const url = BACKEND_URL + path;
-    console.log('[API]', opts.method || 'GET', url);
-    
-    const r = await fetch(url, opts);
-    
-    if (!r.ok) {
-      const errorData = await r.text();
-      console.error(`API error [${r.status}] ${path}:`, errorData);
-      return { ok: false, data: { error: `Server error: ${r.status}` } };
-    }
-    
-    const data = await r.json();
-    console.log('[API] Response:', data);
-    return { ok: true, data };
-    
-  } catch (e) {
-    console.error('[API] Fetch error:', e);
-    return { ok: false, data: { error: e.message } };
-  }
+})();
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+const S = {socket:null,user:null,room:null,player:null,
+           question:null,answered:false,isHost:false,teamScores:{A:0,B:0}};
+
+// ════════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════════
+function show(id){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sc-'+id).classList.add('on');
+  window.scrollTo(0,0);
+}
+function toast(msg,ms=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms);
+}
+function setErr(id,msg){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'),4000);
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmt(n){return(n||0).toLocaleString()}
+
+// API helper — points at Railway backend
+async function api(path,body=null){
+  const opts={headers:{'Content-Type':'application/json'}};
+  if(body){opts.method='POST';opts.body=JSON.stringify(body);}
+  const r=await fetch(BACKEND_URL+path,opts);
+  return {ok:r.ok,data:await r.json()};
 }
 
-// ────────────────────────────────────────────────────────────
-// SOCKET.IO INITIALIZATION (FIXED)
-// ────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════════════════════
+function swTab(t){
+  ['login','register','guest'].forEach(x=>document.getElementById('t-'+x).style.display='none');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['login','register'][i]===t));
+  document.getElementById('t-'+t).style.display='block';
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════════
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pass =document.getElementById('l-pass').value;
+  if(!email||!pass){setErr('l-err','Completa todos los campos');return}
+  const {ok,data}=await api('/api/login',{email,password:pass});
+  if(!ok){setErr('l-err',data.error||'Error');return}
+  S.user=data.user; goLobby();
+}
+async function doRegister(){
+  const username=document.getElementById('r-name').value.trim();
+  const email   =document.getElementById('r-email').value.trim();
+  const pass    =document.getElementById('r-pass').value;
+  if(!username||!email||!pass){setErr('r-err','Completa todos los campos');return}
+  const {ok,data}=await api('/api/register',{username,email,password:pass});
+  if(!ok){setErr('r-err',data.error||'Error');return}
+  S.user=data.user;toast('✅ Cuenta creada!');goLobby();
+}
+function doGuest(){
+  const n=document.getElementById('g-name').value.trim();
+  if(!n||n.length<2){setErr('g-err','Pon al menos 2 caracteres');return}
+  S.user={id:null,username:n,avatar:Math.floor(Math.random()*8)+1};
+  goLobby();
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOBBY
+// ════════════════════════════════════════════════════════════
+function goLobby(){
+  document.getElementById('lob-welcome').textContent=`👋 Hola, ${S.user.username}!`;
+  show('lobby');
+}
+
+let createOpen=false, selectedTopic=null;
+function toggleCreate(){
+  createOpen=!createOpen;
+  document.getElementById('create-panel').classList.toggle('open',createOpen);
+  document.getElementById('create-toggle-btn').textContent=createOpen?'✖ Cancelar':'✨ Crear Lobby';
+  if(createOpen) loadTopics();
+}
+const TOPICS=[
+  {id:'prog', name:'Programación General', icon:'💻'},
+  {id:'html', name:'HTML',                 icon:'🌐'},
+  {id:'js',   name:'JavaScript',           icon:'⚡'},
+];
+function loadTopics(){
+  document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
+    <div class="topic-card" onclick="selectTopic('${t.id}',this)">
+      <div class="topic-icon">${t.icon}</div>
+      <div class="topic-name">${t.name}</div>
+      <div class="topic-q">10 preguntas</div>
+    </div>`).join('');
+}
+function selectTopic(id,card){
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
+  card.classList.add('sel');
+  selectedTopic=id;
+  document.getElementById('create-btn').disabled=false;
+}
+function createRoom(){
+  if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
+  if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento y reintenta.');return}
+  console.log('[create-room] emitting topicId=',selectedTopic);
+  S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
+}
+function joinRoom(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  if(code.length!==6){setErr('join-err','El código debe tener 6 caracteres');return}
+  document.getElementById('join-err').classList.remove('on');
+  S.socket.emit('join-room',{roomCode:code,username:S.user.username,userId:S.user.id});
+}
+
+// ════════════════════════════════════════════════════════════
+//  SOCKET — initialized after Socket.IO script loads
+// ════════════════════════════════════════════════════════════
 function initApp(){
-  console.log('[Socket] Initializing connection to', BACKEND_URL);
-  
   S.socket = io(BACKEND_URL, {
-    transports: ['websocket', 'polling'],  // Try WebSocket first, fallback to polling
+    transports: ['polling'],
     reconnection: true,
     reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10,
-    forceNew: true,
-    rejectUnauthorized: false,  // For development/self-signed certs
-    // Handle Railway proxy:
-    path: '/socket.io',
-    query: {},
-    upgrade: true
+    reconnectionAttempts: 10
   });
-  
-  const banner = document.getElementById('conn-banner');
+  const banner=document.getElementById('conn-banner');
 
-  S.socket.on('connect', () => {
-    console.log('[Socket] ✅ Connected! SID:', S.socket.id);
-    banner.style.display = 'none';
+  S.socket.on('connect',    ()=>{ banner.style.display='none'; });
+  S.socket.on('disconnect', ()=>{
+    banner.style.display='block';
+    banner.textContent='🔄 Reconectando con el servidor...';
   });
-  
-  S.socket.on('disconnect', (reason) => {
-    console.log('[Socket] ❌ Disconnected. Reason:', reason);
-    banner.style.display = 'block';
-    banner.textContent = '🔄 Reconectando con el servidor...';
-  });
-  
-  S.socket.on('connect_error', (error) => {
-    console.error('[Socket] Connection error:', error);
-    banner.style.display = 'block';
-    banner.textContent = '❌ Sin conexión al servidor. Reintentando...';
-  });
-  
-  S.socket.on('error', (error) => {
-    console.error('[Socket] Error:', error);
-    setErr('join-err', error || 'Error de servidor');
+  S.socket.on('connect_error', ()=>{
+    banner.style.display='block';
+    banner.textContent='❌ Sin conexión al servidor. Reintentando...';
   });
 
-  // ──────────────────────────────────────────────────────────
-  // SOCKET.IO EVENT HANDLERS
-  // ──────────────────────────────────────────────────────────
-  
-  S.socket.on('room-created', ({roomCode, topic, questionCount, player, room}) => {
+  S.socket.on('room-created',({roomCode,topic,questionCount,player,room})=>{
     console.log('[room-created]', roomCode, topic);
-    S.player = player;
-    S.room = room;
-    S.isHost = true;
-    setWaitRoom(room, true);
+    S.player=player;S.room=room;S.isHost=true;
+    setWaitRoom(room,true);
     show('waiting');
     toast(`✅ Sala ${roomCode} creada — ${questionCount} preguntas`);
   });
-  
-  S.socket.on('joined-room', ({player, room}) => {
-    console.log('[joined-room]', player.username);
-    S.player = player;
-    S.room = room;
-    S.isHost = false;
-    setWaitRoom(room, false);
+  S.socket.on('joined-room',({player,room})=>{
+    S.player=player;S.room=room;S.isHost=false;
+    setWaitRoom(room,false);
     show('waiting');
-    toast(`✅ Te uniste a la sala`);
   });
-  
-  S.socket.on('join-error', ({msg}) => {
-    console.error('[join-error]', msg);
-    setErr('join-err', msg);
-  });
-  
-  S.socket.on('player-joined', (d) => {
-    console.log('[player-joined]', d.player.username);
-    updateTeams(d);
-    toast(`👤 ${d.player.username} → Equipo ${d.player.team}`);
-  });
-  
-  S.socket.on('player-left', (d) => {
-    console.log('[player-left]', d.username);
-    updateTeams(d);
-    toast(`❌ ${d.username} abandonó`);
-  });
+  S.socket.on('join-error',({msg})=>setErr('join-err',msg));
+  S.socket.on('player-joined',(d)=>{ updateTeams(d); toast(`👤 ${d.player.username} → Equipo ${d.player.team}`); });
+  S.socket.on('player-left',  (d)=>{ updateTeams(d); toast(`❌ ${d.username} abandonó`); });
 
-  S.socket.on('countdown-tick', ({countdown}) => {
-    const el = document.getElementById('cd-num');
-    el.textContent = countdown;
-    el.style.animation = 'none';
-    void el.offsetWidth;  // Trigger reflow
-    el.style.animation = 'pop .65s cubic-bezier(.34,1.56,.64,1)';
+  S.socket.on('countdown-tick',({countdown})=>{
+    const el=document.getElementById('cd-num');
+    el.textContent=countdown;
+    el.style.animation='none';void el.offsetWidth;
+    el.style.animation='pop .65s cubic-bezier(.34,1.56,.64,1)';
     show('countdown');
   });
-  
-  S.socket.on('new-question', ({question, questionNumber, totalQuestions, teamScores}) => {
-    console.log('[new-question]', questionNumber, '/', totalQuestions);
-    S.question = question;
-    S.answered = false;
-    S.teamScores = teamScores || {A: 0, B: 0};
-    renderQuestion(question, questionNumber, totalQuestions, teamScores);
+  S.socket.on('new-question',({question,questionNumber,totalQuestions,teamScores})=>{
+    S.question=question;S.answered=false;S.teamScores=teamScores||{A:0,B:0};
+    renderQuestion(question,questionNumber,totalQuestions,teamScores);
     show('question');
   });
-  
-  S.socket.on('timer-tick', ({timeLeft, total}) => {
-    document.getElementById('t-num').textContent = timeLeft;
-    document.getElementById('t-num').style.color = timeLeft <= 5 ? 'var(--red)' : 'var(--gold)';
-    document.getElementById('t-fill').style.width = Math.max(0, timeLeft / total * 100) + '%';
+  S.socket.on('timer-tick',({timeLeft,total})=>{
+    document.getElementById('t-num').textContent=timeLeft;
+    document.getElementById('t-num').style.color=timeLeft<=5?'var(--red)':'var(--gold)';
+    document.getElementById('t-fill').style.width=Math.max(0,timeLeft/total*100)+'%';
   });
-  
-  S.socket.on('answer-result', ({isCorrect, points, correctAnswer, streak}) => {
-    console.log('[answer-result]', isCorrect ? '✅' : '❌', '+' + points + 'pts');
-    showAnswered(isCorrect, points, streak);
+  S.socket.on('answer-result',({isCorrect,points,correctAnswer,streak})=>{
+    showAnswered(isCorrect,points,streak);
   });
-  
-  S.socket.on('answer-count', ({answered, total}) => {
-    document.getElementById('prog-fill').style.width = (answered / total * 100) + '%';
-    document.getElementById('ans-wait').textContent = 
-      answered === total 
-        ? '✅ Todos respondieron!' 
-        : `⏳ ${answered}/${total} respondieron`;
+  S.socket.on('answer-count',({answered,total})=>{
+    document.getElementById('prog-fill').style.width=(answered/total*100)+'%';
+    document.getElementById('ans-wait').textContent=`${answered}/${total} respondieron`;
   });
-
-  S.socket.on('question-results', (d) => {
-    console.log('[question-results]', d);
-    S.teamScores = d.teamScores;
-    renderResults(d);
-    show('results');
-  });
-  
-  S.socket.on('game-over', (d) => {
-    console.log('[game-over]', d.winner);
-    renderGameOver(d);
-    show('gameover');
-  });
-  
-  S.socket.on('host-disconnected', () => {
-    console.log('[host-disconnected]');
-    show('lobby');
-    setErr('join-err', 'El anfitrión se desconectó');
-    S.socket.disconnect();
+  S.socket.on('question-results',(d)=>{ S.teamScores=d.teamScores; renderResults(d); show('results'); });
+  S.socket.on('game-over',       (d)=>{ renderGameOver(d); show('gameover'); launchConfetti(); });
+  S.socket.on('host-disconnected',()=>toast('⚠️ El anfitrión se desconectó.',5000));
+  S.socket.on('error',({msg})=>{
+    console.error('[server error]', msg);
+    toast('❌ '+msg,5000);
+    setErr('create-err', msg);
   });
 }
 
-// Initialize the app when page is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
+// ════════════════════════════════════════════════════════════
+//  WAITING ROOM
+// ════════════════════════════════════════════════════════════
+function setWaitRoom(room,isHost){
+  document.getElementById('w-code').textContent=room.code;
+  const t=room.topic;
+  const topicObj=TOPICS.find(x=>x.id===t.id)||{icon:'🎯'};
+  document.getElementById('w-topic').textContent=`${topicObj.icon} ${t.name}`;
+  renderTeams(room.teamA||[],room.teamB||[]);
+  document.getElementById('host-start-wrap').style.display=isHost?'block':'none';
+  document.getElementById('wait-msg').style.display=isHost?'none':'block';
+  toggleHostUI(isHost);
+  updateStartBtn(room.players||[]);
 }
+function updateTeams(d){ renderTeams(d.teamA||[],d.teamB||[]); updateStartBtn(d.players||[]); }
+function renderTeams(a,b){
+  document.getElementById('cnt-a').textContent=a.length;
+  document.getElementById('cnt-b').textContent=b.length;
+  const tpl=p=>`<div class="pi">
+    <span style="font-size:1.1rem">${AV[(p.avatar-1)||0]}</span>
+    <span class="pn">${esc(p.username)}${p.socketId===S.player?.socketId?' (Tú)':''}</span>
+    ${p.isHost?'<span title="Anfitrión">👑</span>':''}
+  </div>`;
+  const none='<p style="color:var(--dim);font-size:.78rem;text-align:center">Sin jugadores</p>';
+  document.getElementById('list-a').innerHTML=a.length?a.map(tpl).join(''):none;
+  document.getElementById('list-b').innerHTML=b.length?b.map(tpl).join(''):none;
+}
+function updateStartBtn(players){
+  const btn=document.getElementById('start-btn');
+  if(btn) btn.disabled=players.length<2;
+}
+function toggleHostUI(isHost){
+  ['host-q-bar','host-ans-bar','host-res-bar'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=isHost?'block':'none';
+  });
+}
+function startGame(){ S.socket.emit('start-game',{roomCode:S.room.code}); }
 
+// ════════════════════════════════════════════════════════════
+//  QUESTION
+// ════════════════════════════════════════════════════════════
+function renderQuestion(q,num,total,scores){
+  document.getElementById('q-cnt').textContent=`${num}/${total}`;
+  document.getElementById('h-a').textContent=fmt(scores?.A||0);
+  document.getElementById('h-b').textContent=fmt(scores?.B||0);
+  document.getElementById('q-txt').textContent=q.question_text;
+  document.getElementById('t-num').textContent=q.time_limit;
+  document.getElementById('t-num').style.color='var(--gold)';
+  document.getElementById('t-fill').style.width='100%';
+  [0,1,2,3].forEach(i=>{
+    const b=document.getElementById('ans-'+i);
+    b.querySelector('.ans-txt').textContent=q.options[i]||'—';
+    b.querySelector('.ans-ico').textContent=ANI[i];
+    b.disabled=false; b.classList.remove('sel','ok','ng'); b.style.opacity='1';
+  });
+}
+function submitAnswer(idx){
+  if(S.answered||!S.question) return;
+  S.answered=true;
+  document.getElementById('ans-'+idx).classList.add('sel');
+  [0,1,2,3].forEach(i=>document.getElementById('ans-'+i).disabled=true);
+  S.socket.emit('submit-answer',{roomCode:S.room.code,questionId:S.question.id,answerIndex:idx});
+}
+function showAnswered(isCorrect,points,streak){
+  document.getElementById('ai-big').textContent=isCorrect?'✅':'❌';
+  document.getElementById('pts-big').textContent=isCorrect?'+'+fmt(points)+' pts':'Sin puntos';
+  document.getElementById('pts-big').style.color=isCorrect?'var(--gold)':'var(--red)';
+  const sp=document.getElementById('streak-pill');
+  if(streak>1){sp.textContent=`🔥 RACHA ×${streak}`;sp.style.display='inline-block';}
+  else sp.style.display='none';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('ans-wait').textContent='Esperando a otros jugadores...';
+  show('answered');
+}
+function forceResults(){ S.socket.emit('force-results',{roomCode:S.room.code}); }
+
+// ════════════════════════════════════════════════════════════
+//  RESULTS
+// ════════════════════════════════════════════════════════════
+function renderResults(data){
+  document.getElementById('r-correct').textContent=data.correctAnswerText;
+  document.getElementById('rs-a').textContent=fmt(data.teamScores.A);
+  document.getElementById('rs-b').textContent=fmt(data.teamScores.B);
+  const icons=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  document.getElementById('podium').innerHTML=
+    (data.playerResults||[]).slice(0,5).map((p,i)=>`
+      <div class="pod-item">
+        <span class="pod-rank">${icons[i]||i+1}</span>
+        <div class="pod-dot" style="background:${TC[p.team]}"></div>
+        <span class="pod-name">${esc(p.username)}</span>
+        <span class="${p.isCorrect?'chip-ok':'chip-ng'}">${p.isCorrect?'✓ +'+fmt(p.points):'✗'}</span>
+        <span class="pod-score">${fmt(p.totalScore)}</span>
+      </div>`).join('');
+  if(S.isHost){
+    document.getElementById('next-q-btn').textContent=
+      data.isLastQuestion?'Mostrar resultados finales →'
+      :`Siguiente (${data.questionNumber+1}/${data.totalQuestions}) →`;
+    document.getElementById('next-lbl').style.display='none';
+  } else {
+    document.getElementById('next-lbl').style.display='block';
+  }
+}
+function nextQuestion(){ S.socket.emit('next-question',{roomCode:S.room.code}); }
+
+// ════════════════════════════════════════════════════════════
+//  GAME OVER
+// ════════════════════════════════════════════════════════════
+function renderGameOver(data){
+  const {winner,teamScores,playerResults=[]}=data;
+  let trophy='🤝',wt='¡Empate!',sub='Buen juego de ambos equipos';
+  if(winner==='A'){trophy='🏆';wt='¡Equipo A Gana!';sub='⚡ Dominaron la partida'}
+  if(winner==='B'){trophy='🏆';wt='¡Equipo B Gana!';sub='🔥 Dominaron la partida'}
+  if(S.player&&winner===S.player.team) sub='🎉 ¡Eres parte del equipo ganador!';
+  document.getElementById('go-trophy').textContent=trophy;
+  document.getElementById('go-winner').textContent=wt;
+  document.getElementById('go-sub').textContent=sub;
+  document.getElementById('gs-a').textContent=fmt(teamScores.A);
+  document.getElementById('gs-b').textContent=fmt(teamScores.B);
+  document.getElementById('gsc-a').classList.toggle('winner',winner==='A');
+  document.getElementById('gsc-b').classList.toggle('winner',winner==='B');
+  const icons=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
+  document.getElementById('go-podium').innerHTML=playerResults.slice(0,8).map((p,i)=>`
+    <div class="pod-item">
+      <span class="pod-rank">${icons[i]||i+1}</span>
+      <div class="pod-dot" style="background:${TC[p.team]}"></div>
+      <span style="font-size:1.1rem">${AV[(p.avatar-1)||0]}</span>
+      <span class="pod-name">${esc(p.username)}${p.isHost?' 👑':''}</span>
+      <span class="pod-score">${fmt(p.score)}</span>
+    </div>`).join('');
+}
+function launchConfetti(){
+  const w=document.getElementById('confetti');w.innerHTML='';
+  const cols=['#ffd700','#00d4ff','#ff4f6a','#a855f7','#22c55e','#f59e0b'];
+  for(let i=0;i<90;i++){
+    const d=document.createElement('div');d.className='cf';const sz=5+Math.random()*10;
+    Object.assign(d.style,{left:Math.random()*100+'%',top:'-12px',width:sz+'px',height:sz+'px',
+      background:cols[Math.floor(Math.random()*cols.length)],
+      borderRadius:Math.random()>.5?'50%':'2px',
+      animationDuration:(2+Math.random()*3.5)+'s',
+      animationDelay:(Math.random()*2.5)+'s'});
+    w.appendChild(d);
+  }
+  setTimeout(()=>w.innerHTML='',9000);
+}
+function goLobby(){
+  S.room=null;S.player=null;S.isHost=false;S.answered=false;
+  selectedTopic=null;createOpen=false;
+  document.getElementById('create-panel').classList.remove('open');
+  document.getElementById('create-toggle-btn').textContent='✨ Crear Lobby';
+  document.getElementById('create-btn').disabled=true;
+  document.getElementById('join-code').value='';
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
+  show('lobby');
+}
 </script>
 </body>
 </html>
