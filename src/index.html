@@ -440,24 +440,10 @@ input::placeholder{color:rgba(255,255,255,.25)}
 </script>
 
 <!-- Socket.IO Client CDN -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-// Carga Socket.IO con fallback
-(function loadSocketIO() {
-  var s = document.createElement('script');
-  s.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
-  s.onload = function() { if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp(); };
-  s.onerror = function() {
-    var s2 = document.createElement('script');
-    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js';
-    s2.onload = function() { if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp(); };
-    s2.onerror = function() { document.getElementById('conn-banner').style.display='block'; document.getElementById('conn-banner').textContent='❌ Error cargando Socket.IO. Recarga la página.'; };
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s);
-})();
-</script>
-<script>
-// ─── App code ─────────────────────────────────────────────
+// ─── Initialize app after Socket.IO is loaded ─────────────
+document.addEventListener('DOMContentLoaded', initApp);
 
 
 // ════════════════════════════════════════════════════════════
@@ -514,10 +500,12 @@ function fmt(n){return(n||0).toLocaleString()}
 
 // API helper — points at Railway backend
 async function api(path,body=null){
-  const opts={headers:{'Content-Type':'application/json'}};
-  if(body){opts.method='POST';opts.body=JSON.stringify(body);}
-  const r=await fetch(BACKEND_URL+path,opts);
-  return {ok:r.ok,data:await r.json()};
+  try{
+    const opts={headers:{'Content-Type':'application/json'}};
+    if(body){opts.method='POST';opts.body=JSON.stringify(body);}
+    const r=await fetch(BACKEND_URL+path,opts);
+    return {ok:r.ok,data:await r.json()};
+  }catch(e){ return {ok:false,data:{error:e.message}}; }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -559,9 +547,8 @@ function doGuest(){
 // ════════════════════════════════════════════════════════════
 //  LOBBY
 // ════════════════════════════════════════════════════════════
-async function goLobby(){
+function goLobby(){
   document.getElementById('lob-welcome').textContent=`👋 Hola, ${S.user.username}!`;
-  await loadTopics();
   show('lobby');
 }
 
@@ -570,14 +557,18 @@ function toggleCreate(){
   createOpen=!createOpen;
   document.getElementById('create-panel').classList.toggle('open',createOpen);
   document.getElementById('create-toggle-btn').textContent=createOpen?'✖ Cancelar':'✨ Crear Lobby';
+  if(createOpen) loadTopics();
 }
-async function loadTopics(){
-  const {ok,data}=await api('/api/topics');
-  if(!ok) return;
-  document.getElementById('topic-grid').innerHTML=data.map(t=>`
-    <div class="topic-card" onclick="selectTopic(${t.id},this)">
-      <div class="topic-icon">${TCL[t.icon_code]||'🎯'}</div>
-      <div class="topic-name">${esc(t.name)}</div>
+const TOPICS=[
+  {id:'prog', name:'Programación General', icon:'💻'},
+  {id:'html', name:'HTML',                 icon:'🌐'},
+  {id:'js',   name:'JavaScript',           icon:'⚡'},
+];
+function loadTopics(){
+  document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
+    <div class="topic-card" onclick="selectTopic('${t.id}',this)">
+      <div class="topic-icon">${t.icon}</div>
+      <div class="topic-name">${t.name}</div>
       <div class="topic-q">10 preguntas</div>
     </div>`).join('');
 }
@@ -589,6 +580,7 @@ function selectTopic(id,card){
 }
 function createRoom(){
   if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
+  if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento.');return}
   S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
 }
 function joinRoom(){
