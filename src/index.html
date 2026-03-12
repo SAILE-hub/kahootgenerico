@@ -594,7 +594,12 @@ function joinRoom(){
 //  SOCKET — initialized after Socket.IO script loads
 // ════════════════════════════════════════════════════════════
 function initApp(){
-  S.socket = io(BACKEND_URL, {transports:['websocket','polling']});
+  S.socket = io(BACKEND_URL, {
+    transports: ['polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 10
+  });
   const banner=document.getElementById('conn-banner');
 
   S.socket.on('connect',    ()=>{ banner.style.display='none'; });
