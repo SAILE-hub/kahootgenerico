@@ -20,13 +20,17 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'kahoot-secret-2024')
 
 FRONTEND_URL = os.getenv('FRONTEND_URL', '*')
-CORS(app, origins=[FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000'])
+CORS(app, origins=[FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', '*'])
 socketio = SocketIO(
     app,
-    cors_allowed_origins=[FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', '*'],
-    async_mode='eventlet',
+    cors_allowed_origins='*',
+    async_mode='threading',
+    transports=['websocket', 'polling'],
     logger=False,
-    engineio_logger=False
+    engineio_logger=False,
+    ping_interval=25,
+    ping_timeout=60,
+    upgrade=True
 )
 
 # ── Database ──────────────────────────────────────────────────
