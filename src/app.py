@@ -4,7 +4,7 @@ Flask + Flask-SocketIO + MySQL (PyMySQL)
 """
 
 import os, random, time, json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit, join_room
 from flask_cors import CORS
 import pymysql
@@ -19,6 +19,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'kahoot-secret-2024')
 
+<<<<<<< HEAD
 FRONTEND_URLS = [
     os.getenv('FRONTEND_URL', 'https://kahootgenerico.vercel.app'),
     'https://kahootgenerico.vercel.app',
@@ -36,6 +37,20 @@ socketio = SocketIO(
     engineio_logger=False,
     ping_timeout=60,
     ping_interval=25
+=======
+FRONTEND_URL = os.getenv('FRONTEND_URL', '*')
+CORS(app, origins=[FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', '*'])
+socketio = SocketIO(
+    app,
+    cors_allowed_origins='*',
+    async_mode='threading',
+    transports=['websocket', 'polling'],
+    logger=False,
+    engineio_logger=False,
+    ping_interval=25,
+    ping_timeout=60,
+    upgrade=True
+>>>>>>> e6949889594bc533706fd4bb832cb2753c350209
 )
 
 # ── Database ──────────────────────────────────────────────────
@@ -134,6 +149,17 @@ def next_team(room):
 # ═════════════════════════════════════════════════════════════
 #  REST API
 # ═════════════════════════════════════════════════════════════
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
+
+@app.errorhandler(404)
+def not_found(e):
+    """SPA routing: serve index.html for all non-existent routes (except API)"""
+    if request.path.startswith('/api/'):
+        return jsonify(error='Not Found'), 404
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
 
 @app.route('/api/health')
 def health():
