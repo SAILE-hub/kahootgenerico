@@ -137,7 +137,7 @@ def serve_index():
 @app.route('/<path:path>')
 def serve_spa(path):
     """Serve index.html for all non-API routes (SPA routing)"""
-    if path.startswith('api/') or path == 'socket.io':
+    if path.startswith('api/') or path.startswith('socket.io'):
         return 'Not Found', 404
     return send_from_directory(os.path.dirname(__file__), 'index.html')
 
