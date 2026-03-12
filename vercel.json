@@ -1,19 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Static files ready'",
-  "builds": [
-    {
-      "src": "src/index.html",
-      "use": "@vercel/static"
-    }
-  ],
+  "public": "src",
   "routes": [
     {
       "src": "/socket.io/(.*)",
-      "dest": "https://kahootgenerico-production.up.railway.app/socket.io/$1",
-      "headers": {
-        "Connection": "Upgrade"
-      }
+      "dest": "https://kahootgenerico-production.up.railway.app/socket.io/$1"
     },
     {
       "src": "/api/(.*)",
@@ -21,7 +12,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/src/index.html"
+      "dest": "/index.html"
     }
   ]
 }
