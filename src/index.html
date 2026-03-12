@@ -430,11 +430,12 @@ input::placeholder{color:rgba(255,255,255,.25)}
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!--  ⚙️  CONFIGURA ESTA URL CON TU DOMINIO DE RAILWAY       -->
-<!--  Ejemplo: https://teamkahoot-production.up.railway.app  -->
+<!--  ⚙️  BACKEND URL CONFIGURADA AUTOMÁTICAMENTE       -->
 <!-- ════════════════════════════════════════════════════════ -->
 <script>
-  const BACKEND_URL = "https://kahootgenerico-production.up.railway.app";
+  const BACKEND_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000'
+    : 'https://kahootgenerico-production.up.railway.app';
 </script>
 
 <!-- Socket.IO se carga DESDE el backend de Railway -->

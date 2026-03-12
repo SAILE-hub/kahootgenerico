@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'Frontend deployment'",
+  "outputDirectory": "src",
+  "env": {
+    "BACKEND_URL": "https://kahootgenerico-production.up.railway.app"
+  },
+  "routes": [
+    {
+      "src": "^/.*",
+      "dest": "/index.html"
+    }
+  ]
+}

@@ -19,14 +19,23 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'kahoot-secret-2024')
 
-FRONTEND_URL = os.getenv('FRONTEND_URL', '*')
-CORS(app, origins=[FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000'])
+FRONTEND_URLS = [
+    os.getenv('FRONTEND_URL', 'https://kahootgenerico.vercel.app'),
+    'https://kahootgenerico.vercel.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5000',
+    '*'
+]
+CORS(app, origins=FRONTEND_URLS)
 socketio = SocketIO(
     app,
-    cors_allowed_origins=[FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', '*'],
+    cors_allowed_origins=FRONTEND_URLS,
     async_mode='eventlet',
     logger=False,
-    engineio_logger=False
+    engineio_logger=False,
+    ping_timeout=60,
+    ping_interval=25
 )
 
 # ── Database ──────────────────────────────────────────────────
