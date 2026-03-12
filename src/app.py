@@ -4,7 +4,7 @@ Flask + Flask-SocketIO + MySQL (PyMySQL)
 """
 
 import os, random, time, json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit, join_room
 from flask_cors import CORS
 import pymysql
@@ -125,6 +125,17 @@ def next_team(room):
 # ═════════════════════════════════════════════════════════════
 #  REST API
 # ═════════════════════════════════════════════════════════════
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
+
+@app.route('/<path:path>')
+def serve_spa(path):
+    """Serve index.html for all non-API routes (SPA routing)"""
+    if path.startswith('api/') or path == 'socket.io':
+        return 'Not Found', 404
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
 
 @app.route('/api/health')
 def health():
