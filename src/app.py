@@ -3,6 +3,10 @@ TeamKahoot — Backend (Railway)
 VERSIÓN SIMPLIFICADA Y FUNCIONAL
 """
 
+# Eventlet needs to monkey-patch early for stable WebSocket support.
+import eventlet
+eventlet.monkey_patch()
+
 import os, random, time, json
 from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit, join_room
@@ -31,6 +35,9 @@ socketio = SocketIO(
     ping_timeout=60,
     ping_interval=25
 )
+
+# Expose a WSGI app that supports WebSocket upgrades when running under Gunicorn.
+socketio_app = socketio.WSGIApp(app)
 
 # Database
 def parse_db_url(url):
