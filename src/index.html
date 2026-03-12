@@ -500,12 +500,10 @@ function fmt(n){return(n||0).toLocaleString()}
 
 // API helper — points at Railway backend
 async function api(path,body=null){
-  try{
-    const opts={headers:{'Content-Type':'application/json'}};
-    if(body){opts.method='POST';opts.body=JSON.stringify(body);}
-    const r=await fetch(BACKEND_URL+path,opts);
-    return {ok:r.ok,data:await r.json()};
-  }catch(e){ return {ok:false,data:{error:e.message}}; }
+  const opts={headers:{'Content-Type':'application/json'}};
+  if(body){opts.method='POST';opts.body=JSON.stringify(body);}
+  const r=await fetch(BACKEND_URL+path,opts);
+  return {ok:r.ok,data:await r.json()};
 }
 
 // ════════════════════════════════════════════════════════════
@@ -580,7 +578,8 @@ function selectTopic(id,card){
 }
 function createRoom(){
   if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
-  if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento.');return}
+  if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento y reintenta.');return}
+  console.log('[create-room] emitting topicId=',selectedTopic);
   S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
 }
 function joinRoom(){
@@ -613,6 +612,7 @@ function initApp(){
   });
 
   S.socket.on('room-created',({roomCode,topic,questionCount,player,room})=>{
+    console.log('[room-created]', roomCode, topic);
     S.player=player;S.room=room;S.isHost=true;
     setWaitRoom(room,true);
     show('waiting');
@@ -654,7 +654,11 @@ function initApp(){
   S.socket.on('question-results',(d)=>{ S.teamScores=d.teamScores; renderResults(d); show('results'); });
   S.socket.on('game-over',       (d)=>{ renderGameOver(d); show('gameover'); launchConfetti(); });
   S.socket.on('host-disconnected',()=>toast('⚠️ El anfitrión se desconectó.',5000));
-  S.socket.on('error',({msg})=>toast('❌ '+msg,4000));
+  S.socket.on('error',({msg})=>{
+    console.error('[server error]', msg);
+    toast('❌ '+msg,5000);
+    setErr('create-err', msg);
+  });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -663,7 +667,8 @@ function initApp(){
 function setWaitRoom(room,isHost){
   document.getElementById('w-code').textContent=room.code;
   const t=room.topic;
-  document.getElementById('w-topic').textContent=`${TCL[t.icon_code]||'🎯'} ${t.name}`;
+  const topicObj=TOPICS.find(x=>x.id===t.id)||{icon:'🎯'};
+  document.getElementById('w-topic').textContent=`${topicObj.icon} ${t.name}`;
   renderTeams(room.teamA||[],room.teamB||[]);
   document.getElementById('host-start-wrap').style.display=isHost?'block':'none';
   document.getElementById('wait-msg').style.display=isHost?'none':'block';

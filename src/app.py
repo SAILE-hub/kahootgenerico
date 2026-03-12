@@ -106,54 +106,54 @@ def make_code():
 
 HARDCODED_QUESTIONS = {
     'prog': [
-        {'id':'p1','question_text':'¿Qué significa "bug" en programación?','answer_options':['Un error en el código','Un tipo de variable','Un lenguaje','Un archivo ejecutable'],'correct_answer':0,'time_limit':20},
-        {'id':'p2','question_text':'¿Qué es un algoritmo?','answer_options':['Un tipo de base de datos','Una serie de pasos para resolver un problema','Un lenguaje de programación','Un sistema operativo'],'correct_answer':1,'time_limit':20},
-        {'id':'p3','question_text':'¿Qué tipo de dato almacena números enteros?','answer_options':['String','Boolean','Integer','Float'],'correct_answer':2,'time_limit':15},
-        {'id':'p4','question_text':'¿Qué hace un bucle "while"?','answer_options':['Declara variables','Repite código mientras una condición sea verdadera','Crea funciones','Importa librerías'],'correct_answer':1,'time_limit':20},
-        {'id':'p5','question_text':'¿Qué es la recursividad?','answer_options':['Un tipo de bucle for','Cuando una función se llama a sí misma','Un patrón de diseño','Un tipo de variable'],'correct_answer':1,'time_limit':20},
-        {'id':'p6','question_text':'¿Qué es una variable?','answer_options':['Un tipo de función','Un espacio en memoria para almacenar datos','Un operador lógico','Un protocolo de red'],'correct_answer':1,'time_limit':15},
-        {'id':'p7','question_text':'¿Qué significa POO?','answer_options':['Programación Orientada a Objetos','Proceso Operativo Optimizado','Protocolo de Operaciones Online','Plataforma de Operaciones Offline'],'correct_answer':0,'time_limit':20},
-        {'id':'p8','question_text':'¿Qué es la herencia en POO?','answer_options':['Copiar código entre archivos','Una clase recibe atributos de otra clase','Eliminar variables no usadas','Un tipo de bucle'],'correct_answer':1,'time_limit':20},
-        {'id':'p9','question_text':'¿Qué es un IDE?','answer_options':['Un tipo de base de datos','Un protocolo de internet','Un entorno de desarrollo integrado','Un sistema de control de versiones'],'correct_answer':2,'time_limit':15},
-        {'id':'p10','question_text':'¿Qué hace el operador AND lógico?','answer_options':['Retorna true si al menos una condición es verdadera','Retorna true solo si ambas condiciones son verdaderas','Niega una condición','Compara dos strings'],'correct_answer':1,'time_limit':20},
+        {'id':'p1', 'question_text':'¿Qué significa "bug" en programación?',           'answer_options':['Un error en el código','Un tipo de variable','Un lenguaje','Un ejecutable'],              'correct_answer':0,'time_limit':20},
+        {'id':'p2', 'question_text':'¿Qué es un algoritmo?',                            'answer_options':['Un tipo de base de datos','Una serie de pasos para resolver un problema','Un SO','Un IDE'], 'correct_answer':1,'time_limit':20},
+        {'id':'p3', 'question_text':'¿Qué tipo de dato almacena números enteros?',      'answer_options':['String','Boolean','Integer','Float'],                                                       'correct_answer':2,'time_limit':15},
+        {'id':'p4', 'question_text':'¿Qué hace un bucle "while"?',                      'answer_options':['Declara variables','Repite mientras condición sea verdadera','Crea funciones','Importa librerías'], 'correct_answer':1,'time_limit':20},
+        {'id':'p5', 'question_text':'¿Qué es la recursividad?',                         'answer_options':['Un tipo de bucle for','Cuando una función se llama a sí misma','Un patrón de diseño','Un tipo de variable'], 'correct_answer':1,'time_limit':20},
+        {'id':'p6', 'question_text':'¿Qué es una variable?',                            'answer_options':['Un tipo de función','Un espacio en memoria para almacenar datos','Un operador lógico','Un protocolo'], 'correct_answer':1,'time_limit':15},
+        {'id':'p7', 'question_text':'¿Qué significa POO?',                              'answer_options':['Programación Orientada a Objetos','Proceso Operativo Optimizado','Protocolo Online','Plataforma Offline'], 'correct_answer':0,'time_limit':20},
+        {'id':'p8', 'question_text':'¿Qué es la herencia en POO?',                      'answer_options':['Copiar código','Una clase recibe atributos de otra','Eliminar variables','Un tipo de bucle'],            'correct_answer':1,'time_limit':20},
+        {'id':'p9', 'question_text':'¿Qué es un IDE?',                                  'answer_options':['Una base de datos','Un protocolo','Un entorno de desarrollo integrado','Control de versiones'],            'correct_answer':2,'time_limit':15},
+        {'id':'p10','question_text':'¿Qué hace el operador AND lógico?',                'answer_options':['True si una condición es verdadera','True solo si ambas son verdaderas','Niega una condición','Compara strings'], 'correct_answer':1,'time_limit':20},
     ],
     'html': [
-        {'id':'h1','question_text':'¿Qué significa HTML?','answer_options':['HyperText Markup Language','High Transfer Markup Language','Hyperlink and Text Markup Language','Home Tool Markup Language'],'correct_answer':0,'time_limit':15},
-        {'id':'h2','question_text':'¿Qué etiqueta se usa para el título principal de una página?','answer_options':['<title>','<head>','<h1>','<header>'],'correct_answer':2,'time_limit':15},
-        {'id':'h3','question_text':'¿Cuál es la etiqueta correcta para un hipervínculo?','answer_options':['<link>','<a>','<href>','<url>'],'correct_answer':1,'time_limit':15},
-        {'id':'h4','question_text':'¿Qué etiqueta se usa para insertar una imagen?','answer_options':['<picture>','<photo>','<image>','<img>'],'correct_answer':3,'time_limit':15},
-        {'id':'h5','question_text':'¿Qué atributo define el destino de un enlace <a>?','answer_options':['src','link','href','url'],'correct_answer':2,'time_limit':15},
-        {'id':'h6','question_text':'¿Qué etiqueta crea una lista desordenada?','answer_options':['<ol>','<list>','<ul>','<dl>'],'correct_answer':2,'time_limit':15},
-        {'id':'h7','question_text':'¿Qué etiqueta define el cuerpo del documento HTML?','answer_options':['<main>','<body>','<content>','<section>'],'correct_answer':1,'time_limit':15},
-        {'id':'h8','question_text':'¿Cuál es la etiqueta para crear una tabla?','answer_options':['<table>','<grid>','<tab>','<tr>'],'correct_answer':0,'time_limit':15},
-        {'id':'h9','question_text':'¿Qué etiqueta se usa para texto en negrita?','answer_options':['<bold>','<strong>','<b>','Ambas b y strong'],'correct_answer':3,'time_limit':20},
-        {'id':'h10','question_text':'¿Dónde se coloca el <script> para mejor rendimiento?','answer_options':['En el <head>','Al inicio del <body>','Al final del <body>','No importa el lugar'],'correct_answer':2,'time_limit':20},
+        {'id':'h1', 'question_text':'¿Qué significa HTML?',                             'answer_options':['HyperText Markup Language','High Transfer Markup Language','Hyperlink and Text Markup Language','Home Tool Markup Language'], 'correct_answer':0,'time_limit':15},
+        {'id':'h2', 'question_text':'¿Qué etiqueta es el título principal de una página?','answer_options':['<title>','<head>','<h1>','<header>'],                                                    'correct_answer':2,'time_limit':15},
+        {'id':'h3', 'question_text':'¿Cuál es la etiqueta correcta para un hipervínculo?','answer_options':['<link>','<a>','<href>','<url>'],                                                         'correct_answer':1,'time_limit':15},
+        {'id':'h4', 'question_text':'¿Qué etiqueta se usa para insertar una imagen?',   'answer_options':['<picture>','<photo>','<image>','<img>'],                                                   'correct_answer':3,'time_limit':15},
+        {'id':'h5', 'question_text':'¿Qué atributo define el destino de un enlace <a>?','answer_options':['src','link','href','url'],                                                                  'correct_answer':2,'time_limit':15},
+        {'id':'h6', 'question_text':'¿Qué etiqueta crea una lista desordenada?',        'answer_options':['<ol>','<list>','<ul>','<dl>'],                                                              'correct_answer':2,'time_limit':15},
+        {'id':'h7', 'question_text':'¿Qué etiqueta define el cuerpo del documento HTML?','answer_options':['<main>','<body>','<content>','<section>'],                                                'correct_answer':1,'time_limit':15},
+        {'id':'h8', 'question_text':'¿Cuál es la etiqueta para crear una tabla?',       'answer_options':['<table>','<grid>','<tab>','<tr>'],                                                         'correct_answer':0,'time_limit':15},
+        {'id':'h9', 'question_text':'¿Qué etiqueta se usa para negrita?',               'answer_options':['<bold>','<strong>','<b>','Ambas <b> y <strong>'],                                          'correct_answer':3,'time_limit':20},
+        {'id':'h10','question_text':'¿Dónde se pone el <script> para mejor rendimiento?','answer_options':['En el <head>','Al inicio del <body>','Al final del <body>','No importa'],                 'correct_answer':2,'time_limit':20},
     ],
     'js': [
-        {'id':'j1','question_text':'¿Cómo se declara una variable en JavaScript moderno?','answer_options':['var x = 1','let x = 1','const x = 1','Todas son correctas'],'correct_answer':3,'time_limit':15},
-        {'id':'j2','question_text':'¿Qué método agrega un elemento al final de un array?','answer_options':['push()','pop()','shift()','append()'],'correct_answer':0,'time_limit':15},
-        {'id':'j3','question_text':'¿Qué hace console.log()?','answer_options':['Guarda datos en la BD','Imprime en la consola del navegador','Crea un alert','Envía datos al servidor'],'correct_answer':1,'time_limit':15},
-        {'id':'j4','question_text':'¿Qué es una función arrow en JS?','answer_options':['Una función con nombre','Una sintaxis corta para funciones: () => {}','Un tipo de bucle','Un método de array'],'correct_answer':1,'time_limit':20},
-        {'id':'j5','question_text':'¿Qué retorna typeof null?','answer_options':['"null"','"undefined"','"object"','"boolean"'],'correct_answer':2,'time_limit':20},
-        {'id':'j6','question_text':'¿Cuál es la diferencia entre == y ===?','answer_options':['No hay diferencia','== compara valor, === compara valor y tipo','=== solo funciona con números','== es más estricto'],'correct_answer':1,'time_limit':20},
-        {'id':'j7','question_text':'¿Qué es el DOM?','answer_options':['Un framework de JS','Document Object Model, representación del HTML','Un tipo de base de datos','Un protocolo HTTP'],'correct_answer':1,'time_limit':20},
-        {'id':'j8','question_text':'¿Qué hace el método map() en un array?','answer_options':['Filtra elementos','Retorna un nuevo array transformado','Ordena el array','Busca un elemento'],'correct_answer':1,'time_limit':15},
-        {'id':'j9','question_text':'¿Qué es una Promesa (Promise) en JS?','answer_options':['Una variable constante','Un objeto que representa un valor futuro asíncrono','Un tipo de bucle','Una función recursiva'],'correct_answer':1,'time_limit':20},
-        {'id':'j10','question_text':'¿Qué hace JSON.parse()?','answer_options':['Convierte objeto JS a string JSON','Convierte string JSON a objeto JS','Valida un JSON','Envía JSON al servidor'],'correct_answer':1,'time_limit':15},
+        {'id':'j1', 'question_text':'¿Cómo se declara una variable en JS moderno?',     'answer_options':['Solo var','Solo let','Solo const','var, let y const son válidas'],                         'correct_answer':3,'time_limit':15},
+        {'id':'j2', 'question_text':'¿Qué método agrega un elemento al final de un array?','answer_options':['push()','pop()','shift()','append()'],                                                  'correct_answer':0,'time_limit':15},
+        {'id':'j3', 'question_text':'¿Qué hace console.log()?',                         'answer_options':['Guarda en BD','Imprime en la consola','Crea un alert','Envía al servidor'],                'correct_answer':1,'time_limit':15},
+        {'id':'j4', 'question_text':'¿Qué es una función arrow?',                       'answer_options':['Una función con nombre','Sintaxis corta: () => {}','Un tipo de bucle','Un método de array'], 'correct_answer':1,'time_limit':20},
+        {'id':'j5', 'question_text':'¿Qué retorna typeof null?',                        'answer_options':['"null"','"undefined"','"object"','"boolean"'],                                             'correct_answer':2,'time_limit':20},
+        {'id':'j6', 'question_text':'¿Diferencia entre == y ===?',                      'answer_options':['No hay diferencia','== valor, === valor y tipo','=== solo números','== es más estricto'],  'correct_answer':1,'time_limit':20},
+        {'id':'j7', 'question_text':'¿Qué es el DOM?',                                  'answer_options':['Un framework','Document Object Model','Una base de datos','Un protocolo HTTP'],            'correct_answer':1,'time_limit':20},
+        {'id':'j8', 'question_text':'¿Qué hace el método map() en un array?',           'answer_options':['Filtra elementos','Retorna un nuevo array transformado','Ordena','Busca un elemento'],     'correct_answer':1,'time_limit':15},
+        {'id':'j9', 'question_text':'¿Qué es una Promesa (Promise) en JS?',             'answer_options':['Una variable constante','Un valor futuro asíncrono','Un tipo de bucle','Una función recursiva'], 'correct_answer':1,'time_limit':20},
+        {'id':'j10','question_text':'¿Qué hace JSON.parse()?',                          'answer_options':['Objeto JS a string JSON','String JSON a objeto JS','Valida un JSON','Envía JSON'],         'correct_answer':1,'time_limit':15},
     ],
 }
 
 HARDCODED_TOPICS = {
-    'prog': {'id': 'prog', 'name': 'Programación General', 'icon_code': 2},
-    'html': {'id': 'html', 'name': 'HTML',                 'icon_code': 1},
-    'js':   {'id': 'js',   'name': 'JavaScript',           'icon_code': 2},
+    'prog': {'id':'prog','name':'Programación General','icon_code':2},
+    'html': {'id':'html','name':'HTML',                'icon_code':1},
+    'js':   {'id':'js',  'name':'JavaScript',          'icon_code':2},
 }
 
 def get_questions(topic_id):
-    import copy, random as _r
-    qs = copy.deepcopy(HARDCODED_QUESTIONS.get(str(topic_id), []))
+    import copy as _copy, random as _r
+    qs = _copy.deepcopy(HARDCODED_QUESTIONS.get(str(topic_id), []))
     _r.shuffle(qs)
-    return qs[:10]
+    return qs
 
 def room_pub(room):
     players = list(room['players'].values())
@@ -275,7 +275,7 @@ def on_create_room(data):
 
     topic = HARDCODED_TOPICS.get(str(topic_id))
     if not topic:
-        emit('error', {'msg': 'Tema no encontrado'}); return
+        emit('error', {'msg': f'Tema no encontrado: {topic_id}'}); return
 
     questions = get_questions(topic_id)
     if not questions:
