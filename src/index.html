@@ -548,9 +548,14 @@ const DRAMA_QUESTIONS=[
   {question_text:'¿Qué trabajo hace un programador?',options:['Crear programas y aplicaciones usando lenguajes de programación','Reparar cables de red','Diseñar edificios con software','Vender computadoras en tiendas'],correct:0,time_limit:20},
   {question_text:'¿Qué hace un técnico de redes?',options:['Conecta computadoras para compartir información e internet y configura routers y servidores','Solo repara impresoras','Programa videojuegos','Diseña páginas web únicamente'],correct:0,time_limit:20},
   {question_text:'¿Qué frase dicen al final del drama sobre la informática?',options:['"El futuro es la informática"','"La tecnología nos destruirá"','"El pasado es la informática"','"La informática no es para todos"'],correct:0,time_limit:20},
+  {question_text:'TRAMPA: ¿Cuál de estas NO es una tarea típica de un técnico en informática?',options:['Configurar redes y equipos','Dar soporte a usuarios','Diseñar edificios y planos arquitectónicos','Instalar software y sistemas'],correct:2,time_limit:20},
+  {question_text:'TRAMPA: ¿Cuál opción suena correcta pero es falsa sobre programación?',options:['Se usan lenguajes para crear software','Se prueba y corrige el codigo','Solo sirve para videojuegos','Se trabaja con algoritmos'],correct:2,time_limit:20},
+  {question_text:'TRAMPA: ¿Qué afirmación es incorrecta sobre redes?',options:['Se usan routers y switches','Permiten compartir internet','Solo funcionan sin cables','Requieren configuracion'],correct:2,time_limit:20},
+  {question_text:'TRAMPA: ¿Cuál NO es un ejemplo de herramienta informática cotidiana?',options:['Aplicaciones de mensajeria','Redes sociales','Planos de construccion en papel','Plataformas de aprendizaje'],correct:2,time_limit:20},
+  {question_text:'TRAMPA: ¿Cuál afirmación sobre el programa de informática es falsa?',options:['Incluye practicas tecnicas','Tiene alta demanda laboral','No necesita actualizacion','Ofrece varias salidas'],correct:2,time_limit:20},
 ];
 function loadTopics(){
-  const qCount={prog:10,html:10,js:10,drama:15};
+  const qCount={prog:10,html:10,js:10,drama:20};
   document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
     <div class="topic-card" onclick="selectTopic('${t.id}',this)">
       <div class="topic-icon">${t.icon}</div>
