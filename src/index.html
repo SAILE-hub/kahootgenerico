@@ -500,9 +500,73 @@ async function api(path,body=null){
 function swTab(){}
 
 // ════════════════════════════════════════════════════════════
+//  AUDIO (Web Audio API)
+// ════════════════════════════════════════════════════════════
+let _audioCtx=null;
+let _audioUnlocked=false;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  return _audioCtx;
+}
+function unlockAudio(){
+  try{
+    const ctx=getAudioCtx();
+    if(ctx.state==='suspended') ctx.resume();
+    _audioUnlocked=true;
+  }catch(e){}
+}
+function playTone(freq,dur,type='sine',gain=0.06){
+  if(!_audioUnlocked) return;
+  const ctx=getAudioCtx();
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  o.type=type;
+  o.frequency.value=freq;
+  g.gain.value=gain;
+  o.connect(g); g.connect(ctx.destination);
+  const t=ctx.currentTime;
+  o.start(t);
+  g.gain.setValueAtTime(gain,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.stop(t+dur+0.02);
+}
+function playSeq(seq){
+  if(!_audioUnlocked) return;
+  const ctx=getAudioCtx();
+  let t=ctx.currentTime;
+  seq.forEach(s=>{
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.type=s.type||'sine';
+    o.frequency.value=s.freq||440;
+    const dur=s.dur||0.12;
+    const gain=s.gain||0.06;
+    const gap=s.gap||0.02;
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t);
+    g.gain.setValueAtTime(gain,t);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.stop(t+dur+0.02);
+    t+=dur+gap;
+  });
+}
+function sfxCorrect(){ playSeq([{freq:660,dur:0.10},{freq:880,dur:0.12}]); }
+function sfxIncorrect(){ playSeq([{freq:240,dur:0.14,type:'sawtooth',gain:0.05},{freq:180,dur:0.18,type:'sawtooth',gain:0.05}]); }
+function sfxWin(){ playSeq([{freq:523,dur:0.12},{freq:659,dur:0.12},{freq:784,dur:0.18},{freq:1046,dur:0.18}]); }
+function sfxLose(){ playSeq([{freq:220,dur:0.16,type:'square',gain:0.05},{freq:196,dur:0.18,type:'square',gain:0.05}]); }
+function sfxTick(){ playTone(920,0.06,'square',0.045); }
+function sfxCountdown(){ playTone(520,0.08,'square',0.045); }
+function sfxGameOver(winner){
+  if(!S.player||!S.player.team) return;
+  if(winner==='DRAW') return;
+  if(winner===S.player.team) sfxWin(); else sfxLose();
+}
+
+// ════════════════════════════════════════════════════════════
 //  AUTH
 // ════════════════════════════════════════════════════════════
 function doGuest(){
+  unlockAudio();
   const n=document.getElementById('g-name').value.trim();
   if(!n||n.length<2){setErr('g-err','Pon al menos 2 caracteres');return}
   S.user={id:null,username:n,avatar:Math.floor(Math.random()*8)+1};
@@ -570,12 +634,14 @@ function selectTopic(id,card){
   document.getElementById('create-btn').disabled=false;
 }
 function createRoom(){
+  unlockAudio();
   if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
   if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento y reintenta.');return}
   console.log('[create-room] emitting topicId=',selectedTopic);
   S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
 }
 function joinRoom(){
+  unlockAudio();
   const code=document.getElementById('join-code').value.trim().toUpperCase();
   if(code.length!==6){setErr('join-err','El código debe tener 6 caracteres');return}
   document.getElementById('join-err').classList.remove('on');
@@ -619,7 +685,7 @@ function initApp(){
     S.player=player;S.room=room;S.isHost=true;
     setWaitRoom(room,true);
     show('waiting');
-    const qc = topic?.id==='drama' ? 15 : (questionCount||10);
+    const qc = topic?.id==='drama' ? 20 : (questionCount||10);
     toast(`✅ Sala ${roomCode} creada — ${qc} preguntas`);
   });
   S.socket.on('joined-room',({player,room})=>{
@@ -636,6 +702,7 @@ function initApp(){
     el.textContent=countdown;
     el.style.animation='none';void el.offsetWidth;
     el.style.animation='pop .65s cubic-bezier(.34,1.56,.64,1)';
+    sfxCountdown();
     show('countdown');
   });
   S.socket.on('new-question',({question,questionNumber,totalQuestions,teamScores})=>{
@@ -647,8 +714,10 @@ function initApp(){
     document.getElementById('t-num').textContent=timeLeft;
     document.getElementById('t-num').style.color=timeLeft<=5?'var(--red)':'var(--gold)';
     document.getElementById('t-fill').style.width=Math.max(0,timeLeft/total*100)+'%';
+    if(timeLeft===5) sfxTick();
   });
   S.socket.on('answer-result',({isCorrect,points,correctAnswer,streak})=>{
+    if(isCorrect) sfxCorrect(); else sfxIncorrect();
     showAnswered(isCorrect,points,streak);
   });
   S.socket.on('answer-count',({answered,total})=>{
@@ -656,7 +725,7 @@ function initApp(){
     document.getElementById('ans-wait').textContent=`${answered}/${total} respondieron`;
   });
   S.socket.on('question-results',(d)=>{ S.teamScores=d.teamScores; renderResults(d); show('results'); });
-  S.socket.on('game-over',       (d)=>{ renderGameOver(d); show('gameover'); launchConfetti(); });
+  S.socket.on('game-over',       (d)=>{ renderGameOver(d); show('gameover'); launchConfetti(); sfxGameOver(d.winner); });
   S.socket.on('host-disconnected',()=>toast('⚠️ El anfitrión se desconectó.',5000));
   S.socket.on('error',({msg})=>{
     console.error('[server error]', msg);
@@ -702,7 +771,10 @@ function toggleHostUI(isHost){
     if(el) el.style.display=isHost?'block':'none';
   });
 }
-function startGame(){ S.socket.emit('start-game',{roomCode:S.room.code}); }
+function startGame(){
+  unlockAudio();
+  S.socket.emit('start-game',{roomCode:S.room.code});
+}
 
 // ════════════════════════════════════════════════════════════
 //  QUESTION
@@ -723,6 +795,7 @@ function renderQuestion(q,num,total,scores){
   });
 }
 function submitAnswer(idx){
+  unlockAudio();
   if(S.answered||!S.question) return;
   S.answered=true;
   document.getElementById('ans-'+idx).classList.add('sel');
