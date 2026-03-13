@@ -36,7 +36,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--txt);
   text-transform:uppercase;margin-top:-4px}
 
 .card{background:var(--s1);border:1px solid var(--dim2);border-radius:var(--r2);
-  padding:28px 24px;width:100%;max-width:440px;box-shadow:var(--sh);margin:0 auto}
+  padding:28px 24px;width:100%;max-width:440px;box-shadow:var(--sh)}
 .card-title{font-family:'Boogaloo',cursive;font-size:1.4rem;margin-bottom:18px;text-align:center}
 .join-card{display:flex;flex-direction:column;align-items:center;text-align:center}
 .join-card .code-big{max-width:360px;width:100%}
@@ -79,7 +79,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
 .err.on{display:block}
 
 /* LOBBY */
-.lobby-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;margin:0 auto}
+.lobby-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
 .code-big{background:var(--s2);border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
   padding:16px;color:#fff;font-family:'Boogaloo',cursive;font-size:2.2rem;
   text-align:center;letter-spacing:8px;text-transform:uppercase;width:100%;outline:none;transition:.2s}
@@ -91,7 +91,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
 .create-inner{padding:22px 20px}
 .create-title{font-family:'Boogaloo',cursive;font-size:1.3rem;margin-bottom:16px;text-align:center;color:var(--gold)}
 
-.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.topic-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .topic-card{background:var(--s2);border:2px solid rgba(255,255,255,.06);border-radius:16px;
   padding:14px 10px;cursor:pointer;text-align:center;transition:all .18s}
 .topic-card:hover{transform:translateY(-3px);border-color:var(--pur)}
@@ -236,7 +236,6 @@ input::placeholder{color:rgba(255,255,255,.25)}
 @media(max-width:480px){
   .ans-grid{grid-template-columns:1fr}
   .teams{grid-template-columns:1fr}
-  .topic-grid{grid-template-columns:1fr}
   .go-scores{grid-template-columns:1fr}
   .q-txt{font-size:1.15rem;padding:16px}
   .code-big{font-size:1.6rem;letter-spacing:5px}
@@ -272,7 +271,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
 </div>
 
 <!-- LOBBY -->
- <center>
+ 
 <div class="sc" id="sc-lobby">
   <div style="text-align:center;margin-bottom:22px">
     <div class="logo">🎮 TeamKahoot</div>
@@ -298,7 +297,6 @@ input::placeholder{color:rgba(255,255,255,.25)}
       </div>
     </div>
   </div>
-</center>
 </div>
 
 <!-- WAITING -->
@@ -429,7 +427,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 //  ICONS / CONSTANTS
 // ════════════════════════════════════════════════════════════
 const AV  = ['🦊','🐯','🦁','🐧','🦅','🐬','🦋','🐉'];
-const TCL = {1:'🌍',2:'🔬',3:'🎬'};
+const TCL = {1:'🌍',2:'🔬',3:'🎬',4:'🎭'};
 const ANI = ['▲','◆','●','■'];
 const TC  = {A:'var(--ta)',B:'var(--tb)'};
 
@@ -527,16 +525,37 @@ function toggleCreate(){
   if(createOpen) loadTopics();
 }
 const TOPICS=[
-  {id:'prog', name:'Programación General', icon:'💻'},
-  {id:'html', name:'HTML',                 icon:'🌐'},
-  {id:'js',   name:'JavaScript',           icon:'⚡'},
+  {id:'prog',  name:'Programación General', icon:'💻'},
+  {id:'html',  name:'HTML',                 icon:'🌐'},
+  {id:'js',    name:'JavaScript',           icon:'⚡'},
+  {id:'drama', name:'Drama y Exposición',   icon:'🎭'},
+];
+
+// Preguntas locales para el lobby Drama y Exposición
+const DRAMA_QUESTIONS=[
+  {question_text:'¿Cuántos años dura el programa de informática?',options:['3 años (4to, 5to y 6to año)','4 años (3ro al 6to)','2 años (5to y 6to)','5 años'],correct:0,time_limit:20},
+  {question_text:'¿Cuántas horas totales tiene la carga horaria del programa de informática?',options:['4680 horas','3600 horas','5200 horas','2400 horas'],correct:0,time_limit:20},
+  {question_text:'¿En qué nivel se estudia el Bachillerato Técnico en Informática?',options:['Nivel 3','Nivel 1','Nivel 2','Nivel 4'],correct:0,time_limit:20},
+  {question_text:'¿En qué sector principal se puede trabajar con este programa de informática?',options:['Servicios e Informática','Manufactura e Industria','Salud y Bienestar','Construcción y Obra'],correct:0,time_limit:20},
+  {question_text:'¿Cuál es un beneficio importante del programa de informática?',options:['Alta demanda laboral','Horario reducido','Solo trabajo en casa','No requiere práctica'],correct:0,time_limit:20},
+  {question_text:'¿En qué área se puede trabajar ayudando a usuarios de computadoras?',options:['Asistencia y soporte al usuario de TI','Diseño gráfico','Contabilidad digital','Seguridad física'],correct:0,time_limit:20},
+  {question_text:'¿Qué es la informática?',options:['Ciencia que procesa, almacena y transmite información usando computadoras','Solo el uso de internet','Reparar teléfonos móviles','Diseñar ropa con tecnología'],correct:0,time_limit:20},
+  {question_text:'¿Por qué la informática es una de las áreas más importantes hoy en día?',options:['Casi todas las empresas y organizaciones utilizan tecnología','Porque es la materia más fácil','Porque solo se usa en hospitales','Porque no requiere estudiar'],correct:0,time_limit:20},
+  {question_text:'Menciona dos herramientas que usamos todos los días gracias a la informática.',options:['Aplicaciones móviles y redes sociales','Calculadoras y lápices','Libros y mapas','Martillos y tornillos'],correct:0,time_limit:20},
+  {question_text:'¿La informática es solo usar computadoras?',options:['No, es mucho más que usar computadoras','Sí, solo se trata de usar computadoras','Sí, solo es programar','No, solo se trata de redes'],correct:0,time_limit:20},
+  {question_text:'Menciona dos áreas profesionales de la informática.',options:['Programación y redes informáticas','Medicina y enfermería','Contabilidad y finanzas','Arquitectura y diseño'],correct:0,time_limit:20},
+  {question_text:'¿Qué se aprende en el área de informática?',options:['Crear programas, diseñar páginas web, reparar computadoras y administrar redes','Solo a escribir documentos','Solo a navegar por internet','Solo a usar redes sociales'],correct:0,time_limit:20},
+  {question_text:'¿Qué trabajo hace un programador?',options:['Crear programas y aplicaciones usando lenguajes de programación','Reparar cables de red','Diseñar edificios con software','Vender computadoras en tiendas'],correct:0,time_limit:20},
+  {question_text:'¿Qué hace un técnico de redes?',options:['Conecta computadoras para compartir información e internet y configura routers y servidores','Solo repara impresoras','Programa videojuegos','Diseña páginas web únicamente'],correct:0,time_limit:20},
+  {question_text:'¿Qué frase dicen al final del drama sobre la informática?',options:['"El futuro es la informática"','"La tecnología nos destruirá"','"El pasado es la informática"','"La informática no es para todos"'],correct:0,time_limit:20},
 ];
 function loadTopics(){
+  const qCount={prog:10,html:10,js:10,drama:15};
   document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
     <div class="topic-card" onclick="selectTopic('${t.id}',this)">
       <div class="topic-icon">${t.icon}</div>
       <div class="topic-name">${t.name}</div>
-      <div class="topic-q">10 preguntas</div>
+      <div class="topic-q">${qCount[t.id]||10} preguntas</div>
     </div>`).join('');
 }
 function selectTopic(id,card){
@@ -595,7 +614,8 @@ function initApp(){
     S.player=player;S.room=room;S.isHost=true;
     setWaitRoom(room,true);
     show('waiting');
-    toast(`✅ Sala ${roomCode} creada — ${questionCount} preguntas`);
+    const qc = topic?.id==='drama' ? 15 : (questionCount||10);
+    toast(`✅ Sala ${roomCode} creada — ${qc} preguntas`);
   });
   S.socket.on('joined-room',({player,room})=>{
     S.player=player;S.room=room;S.isHost=false;
@@ -694,11 +714,11 @@ function renderQuestion(q,num,total,scores){
     const b=document.getElementById('ans-'+i);
     b.querySelector('.ans-txt').textContent=q.options[i]||'—';
     b.querySelector('.ans-ico').textContent=ANI[i];
-    b.disabled=S.isHost; b.classList.remove('sel','ok','ng'); b.style.opacity=S.isHost?'0.5':'1';
+    b.disabled=false; b.classList.remove('sel','ok','ng'); b.style.opacity='1';
   });
 }
 function submitAnswer(idx){
-  if(S.answered||!S.question||S.isHost) return;
+  if(S.answered||!S.question) return;
   S.answered=true;
   document.getElementById('ans-'+idx).classList.add('sel');
   [0,1,2,3].forEach(i=>document.getElementById('ans-'+i).disabled=true);
@@ -745,7 +765,7 @@ function renderResults(data){
 }
 function nextQuestion(){ S.socket.emit('next-question',{roomCode:S.room.code}); }
 
-// ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════ 
 //  GAME OVER
 // ════════════════════════════════════════════════════════════
 function renderGameOver(data){
