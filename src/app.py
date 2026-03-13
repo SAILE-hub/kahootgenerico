@@ -144,8 +144,11 @@ def get_questions(topic_id):
     _r.shuffle(qs)
     return qs
 
+def _active_players(room):
+    return [p for p in room['players'].values() if not p.get('isHost')]
+
 def room_pub(room):
-    players = list(room['players'].values())
+    players = _active_players(room)
     return {
         'code': room['code'],
         'topic': room['topic'],
@@ -156,7 +159,7 @@ def room_pub(room):
     }
 
 def next_team(room):
-    return 'A' if len(room['players']) % 2 == 0 else 'B'
+    return 'A' if len(_active_players(room)) % 2 == 0 else 'B'
 
 # REST API
 @app.route('/')
@@ -284,12 +287,13 @@ def on_create_room(data):
     avatar = random.randint(1, 8)
     player = {
         'socketId': request.sid, 'userId': user_id,
-        'username': host_name, 'team': 'A',
+        'username': host_name, 'team': None,
         'score': 0, 'streak': 0, 'avatar': avatar, 'isHost': True,
     }
     rooms[code] = {
         'code': code, 'topic': topic, 'questions': questions,
         'host_sid': request.sid, 'host_name': host_name,
+        'host_user_id': user_id,
         'players': {request.sid: player},
         'state': 'waiting',
         'current_idx': -1, 'current_q': None,
@@ -334,7 +338,7 @@ def on_start_game(data):
     room = rooms.get(code)
     if not room or request.sid != room['host_sid']:
         emit('error', {'msg': 'No autorizado'}); return
-    if len(room['players']) < 2:
+    if len(_active_players(room)) < 2:
         emit('error', {'msg': 'Mínimo 2 jugadores'}); return
     
     room['state'] = 'countdown'
@@ -361,6 +365,7 @@ def on_submit_answer(data):
     
     player = room['players'].get(request.sid)
     if not player: return
+    if player.get('isHost'): return
     
     q = room['current_q']
     is_correct = ans_idx == q['correct_answer']
@@ -382,7 +387,7 @@ def on_submit_answer(data):
     room['q_answers'][request.sid] = {'answerIndex': ans_idx, 'isCorrect': is_correct, 'points': points}
     
     emit('answer-result', {'isCorrect': is_correct, 'points': points, 'correctAnswer': q['correct_answer'], 'streak': player['streak']})
-    socketio.emit('answer-count', {'answered': len(room['q_answers']), 'total': len(room['players'])}, to=code)
+    socketio.emit('answer-count', {'answered': len(room['q_answers']), 'total': len(_active_players(room))}, to=code)
 
 @socketio.on('next-question')
 def on_next_question(data):
@@ -445,7 +450,7 @@ def do_show_results(code):
         'isCorrect': room['q_answers'].get(p['socketId'], {}).get('isCorrect', False),
         'points': room['q_answers'].get(p['socketId'], {}).get('points', 0),
         'streak': p['streak'], 'isHost': p['isHost'],
-    } for p in room['players'].values()], key=lambda x: -x['totalScore'])
+    } for p in _active_players(room)], key=lambda x: -x['totalScore'])
 
     socketio.emit('question-results', {
         'correctAnswer': q['correct_answer'],
@@ -466,11 +471,11 @@ def end_game(code):
     room['timer_cancel'] = True
     s = room['team_scores']
     winner = 'A' if s['A'] > s['B'] else ('B' if s['B'] > s['A'] else 'DRAW')
-    players = sorted(room['players'].values(), key=lambda p: -p['score'])
+    players = sorted(_active_players(room), key=lambda p: -p['score'])
 
     try:
         wc = 1 if winner == 'A' else (2 if winner == 'B' else 0)
-        host_uid = next((p['userId'] for p in players if p['isHost']), None)
+        host_uid = room.get('host_user_id')
 
         conn = get_db()
         try:
@@ -484,7 +489,7 @@ def end_game(code):
                     team_num = 1 if p['team'] == 'A' else 2
                     cur.execute(
                         'INSERT INTO session_players (session_id, user_id, guest_name, team, final_score, is_host) VALUES (%s,%s,%s,%s,%s,%s)',
-                        (sess_id, p['userId'], None if p['userId'] else p['username'], team_num, p['score'], 1 if p['isHost'] else 0)
+                        (sess_id, p['userId'], None if p['userId'] else p['username'], team_num, p['score'], 0)
                     )
                     if p['userId']:
                         won = 1 if p['team'] == winner else 0

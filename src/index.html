@@ -694,11 +694,11 @@ function renderQuestion(q,num,total,scores){
     const b=document.getElementById('ans-'+i);
     b.querySelector('.ans-txt').textContent=q.options[i]||'—';
     b.querySelector('.ans-ico').textContent=ANI[i];
-    b.disabled=false; b.classList.remove('sel','ok','ng'); b.style.opacity='1';
+    b.disabled=S.isHost; b.classList.remove('sel','ok','ng'); b.style.opacity=S.isHost?'0.5':'1';
   });
 }
 function submitAnswer(idx){
-  if(S.answered||!S.question) return;
+  if(S.answered||!S.question||S.isHost) return;
   S.answered=true;
   document.getElementById('ans-'+idx).classList.add('sel');
   [0,1,2,3].forEach(i=>document.getElementById('ans-'+i).disabled=true);
