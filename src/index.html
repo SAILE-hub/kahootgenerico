@@ -36,7 +36,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--txt);
   text-transform:uppercase;margin-top:-4px}
 
 .card{background:var(--s1);border:1px solid var(--dim2);border-radius:var(--r2);
-  padding:28px 24px;width:100%;max-width:440px;box-shadow:var(--sh)}
+  padding:28px 24px;width:100%;max-width:440px;box-shadow:var(--sh);margin:0 auto}
 .card-title{font-family:'Boogaloo',cursive;font-size:1.4rem;margin-bottom:18px;text-align:center}
 .join-card{display:flex;flex-direction:column;align-items:center;text-align:center}
 .join-card .code-big{max-width:360px;width:100%}
@@ -79,7 +79,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
 .err.on{display:block}
 
 /* LOBBY */
-.lobby-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
+.lobby-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;margin:0 auto}
 .code-big{background:var(--s2);border:2px solid rgba(255,255,255,.1);border-radius:var(--r);
   padding:16px;color:#fff;font-family:'Boogaloo',cursive;font-size:2.2rem;
   text-align:center;letter-spacing:8px;text-transform:uppercase;width:100%;outline:none;transition:.2s}
@@ -287,7 +287,6 @@ input::placeholder{color:rgba(255,255,255,.25)}
       <div class="err" id="join-err"></div>
       <button class="btn bc" onclick="joinRoom()" style="margin-top:12px">Entrar →</button>
     </div>
-  </center>
     <div class="divider">o</div>
     <button class="btn bp" id="create-toggle-btn" onclick="toggleCreate()">✨ Crear Lobby</button>
     <div class="create-panel" id="create-panel">
@@ -299,6 +298,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
       </div>
     </div>
   </div>
+</center>
 </div>
 
 <!-- WAITING -->
