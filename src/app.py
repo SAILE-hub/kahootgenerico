@@ -130,12 +130,30 @@ HARDCODED_QUESTIONS = {
         {'id':'j9', 'question_text':'¿Qué es una Promesa (Promise) en JS?', 'answer_options':['Una variable constante','Un valor futuro asíncrono','Un tipo de bucle','Una función recursiva'], 'correct_answer':1,'time_limit':20},
         {'id':'j10','question_text':'¿Qué hace JSON.parse()?', 'answer_options':['Objeto JS a string JSON','String JSON a objeto JS','Valida un JSON','Envía JSON'], 'correct_answer':1,'time_limit':15},
     ],
+    'drama': [
+        {'id':'d1', 'question_text':'¿Cuántos años dura el programa de informática?', 'answer_options':['3 años (4to, 5to y 6to año)','4 años (3ro al 6to)','2 años (5to y 6to)','5 años'], 'correct_answer':0,'time_limit':20},
+        {'id':'d2', 'question_text':'¿Cuántas horas totales tiene la carga horaria del programa de informática?', 'answer_options':['4680 horas','3600 horas','5200 horas','2400 horas'], 'correct_answer':0,'time_limit':20},
+        {'id':'d3', 'question_text':'¿En qué nivel se estudia el Bachillerato Técnico en Informática?', 'answer_options':['Nivel 3','Nivel 1','Nivel 2','Nivel 4'], 'correct_answer':0,'time_limit':20},
+        {'id':'d4', 'question_text':'¿En qué sector principal se puede trabajar con este programa de informática?', 'answer_options':['Servicios e Informática','Manufactura e Industria','Salud y Bienestar','Construcción y Obra'], 'correct_answer':0,'time_limit':20},
+        {'id':'d5', 'question_text':'¿Cuál es un beneficio importante del programa de informática?', 'answer_options':['Alta demanda laboral','Horario reducido','Solo trabajo en casa','No requiere práctica'], 'correct_answer':0,'time_limit':20},
+        {'id':'d6', 'question_text':'¿En qué área se puede trabajar ayudando a usuarios de computadoras?', 'answer_options':['Asistencia y soporte al usuario de TI','Diseño gráfico','Contabilidad digital','Seguridad física'], 'correct_answer':0,'time_limit':20},
+        {'id':'d7', 'question_text':'¿Qué es la informática?', 'answer_options':['Ciencia que procesa, almacena y transmite información usando computadoras','Solo el uso de internet','Reparar teléfonos móviles','Diseñar ropa con tecnología'], 'correct_answer':0,'time_limit':20},
+        {'id':'d8', 'question_text':'¿Por qué la informática es una de las áreas más importantes hoy en día?', 'answer_options':['Casi todas las empresas y organizaciones utilizan tecnología','Porque es la materia más fácil','Porque solo se usa en hospitales','Porque no requiere estudiar'], 'correct_answer':0,'time_limit':20},
+        {'id':'d9', 'question_text':'Menciona dos herramientas que usamos todos los días gracias a la informática.', 'answer_options':['Aplicaciones móviles y redes sociales','Calculadoras y lápices','Libros y mapas','Martillos y tornillos'], 'correct_answer':0,'time_limit':20},
+        {'id':'d10', 'question_text':'¿La informática es solo usar computadoras?', 'answer_options':['No, es mucho más que usar computadoras','Sí, solo se trata de usar computadoras','Sí, solo es programar','No, solo se trata de redes'], 'correct_answer':0,'time_limit':20},
+        {'id':'d11', 'question_text':'Menciona dos áreas profesionales de la informática.', 'answer_options':['Programación y redes informáticas','Medicina y enfermería','Contabilidad y finanzas','Arquitectura y diseño'], 'correct_answer':0,'time_limit':20},
+        {'id':'d12', 'question_text':'¿Qué se aprende en el área de informática?', 'answer_options':['Crear programas, diseñar páginas web, reparar computadoras y administrar redes','Solo a escribir documentos','Solo a navegar por internet','Solo a usar redes sociales'], 'correct_answer':0,'time_limit':20},
+        {'id':'d13', 'question_text':'¿Qué trabajo hace un programador?', 'answer_options':['Crear programas y aplicaciones usando lenguajes de programación','Reparar cables de red','Diseñar edificios con software','Vender computadoras en tiendas'], 'correct_answer':0,'time_limit':20},
+        {'id':'d14', 'question_text':'¿Qué hace un técnico de redes?', 'answer_options':['Conecta computadoras para compartir información e internet y configura routers y servidores','Solo repara impresoras','Programa videojuegos','Diseña páginas web únicamente'], 'correct_answer':0,'time_limit':20},
+        {'id':'d15', 'question_text':'¿Qué frase dicen al final del drama sobre la informática?', 'answer_options':['"El futuro es la informática"','"La tecnología nos destruirá"','"El pasado es la informática"','"La informática no es para todos"'], 'correct_answer':0,'time_limit':20},
+    ],
 }
 
 HARDCODED_TOPICS = {
     'prog': {'id':'prog','name':'Programación General','icon_code':2},
     'html': {'id':'html','name':'HTML','icon_code':1},
     'js':   {'id':'js',  'name':'JavaScript','icon_code':2},
+    'drama':{'id':'drama','name':'Drama y Exposición','icon_code':1},
 }
 
 def get_questions(topic_id):
