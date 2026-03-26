@@ -34,6 +34,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--txt);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .logo-s{font-size:.75rem;font-weight:800;color:var(--dim);letter-spacing:3px;
   text-transform:uppercase;margin-top:-4px}
+.logo,.logo-s{text-align:center}
 
 .card{background:var(--s1);border:1px solid var(--dim2);border-radius:var(--r2);
   padding:28px 24px;width:100%;max-width:440px;box-shadow:var(--sh)}
@@ -84,6 +85,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
   padding:16px;color:#fff;font-family:'Boogaloo',cursive;font-size:2.2rem;
   text-align:center;letter-spacing:8px;text-transform:uppercase;width:100%;outline:none;transition:.2s}
 .code-big:focus{border-color:var(--ta)}
+.code-big,.code-badge{display:block;margin-left:auto;margin-right:auto}
 
 .create-panel{background:var(--s1);border:1px solid var(--dim2);border-radius:var(--r2);
   overflow:hidden;transition:max-height .4s ease,opacity .35s ease;max-height:0;opacity:0;pointer-events:none}
@@ -102,6 +104,13 @@ input::placeholder{color:rgba(255,255,255,.25)}
 .topic-q{font-size:.7rem;color:var(--dim);font-weight:700;margin-top:4px}
 .topic-card.sel::after{content:'✓';position:absolute;top:6px;right:8px;font-size:.75rem;font-weight:800;color:var(--gold)}
 .topic-card{position:relative}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 16px}
+.mode-btn{background:var(--s2);border:2px solid rgba(255,255,255,.06);border-radius:16px;
+  padding:12px 10px;cursor:pointer;text-align:center;font-weight:800;font-size:.9rem;color:#fff;
+  transition:all .18s;font-family:'Nunito',sans-serif}
+.mode-btn:hover{transform:translateY(-2px);border-color:var(--pur)}
+.mode-btn.sel{border-color:var(--gold);box-shadow:0 0 18px rgba(255,215,0,.15);
+  background:linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,215,0,.03))}
 
 /* WAITING */
 .wait-header{text-align:center;margin-bottom:22px}
@@ -110,7 +119,12 @@ input::placeholder{color:rgba(255,255,255,.25)}
   letter-spacing:7px;margin-bottom:8px}
 .topic-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,.15);
   border:1px solid rgba(168,85,247,.3);border-radius:999px;padding:5px 14px;font-size:.82rem;font-weight:800}
+.mode-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,255,.15);
+  border:1px solid rgba(0,212,255,.3);border-radius:999px;padding:5px 14px;font-size:.82rem;font-weight:800}
 .teams{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:600px}
+.solo-wrap{display:none;width:100%;max-width:520px}
+.solo-wrap .tcol{border-top-color:var(--pur)}
+.tcol.solo .tcol-title{color:var(--pur)}
 .tcol{background:var(--s1);border-radius:var(--r2);padding:14px;border-top:4px solid transparent}
 .tcol.a{border-color:var(--ta)}.tcol.b{border-color:var(--tb)}
 .tcol-title{font-family:'Boogaloo',cursive;font-size:1.1rem;margin-bottom:10px;
@@ -201,6 +215,8 @@ input::placeholder{color:rgba(255,255,255,.25)}
 .chip-ok{background:rgba(0,230,118,.13);color:var(--grn);border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:800}
 .chip-ng{background:rgba(255,71,87,.13);color:var(--red);border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:800}
 .pod-score{font-family:'Boogaloo',cursive;font-size:1.05rem;color:var(--gold)}
+.pod-correct{background:rgba(0,212,255,.12);color:var(--ta);border-radius:999px;
+  padding:2px 9px;font-size:.72rem;font-weight:800}
 .next-lbl{color:var(--dim);font-size:.82rem;font-weight:700;margin-top:10px;text-align:center}
 
 /* GAME OVER */
@@ -232,6 +248,11 @@ input::placeholder{color:rgba(255,255,255,.25)}
 #conn-banner{position:fixed;top:0;left:0;right:0;background:#7c3aed;
   padding:8px;text-align:center;font-weight:800;font-size:.85rem;z-index:10000;
   display:none;animation:fadein .2s ease}
+.solo-mode .scores-hud{display:none}
+.solo-mode .team-sb{display:none}
+.solo-mode .go-scores{display:none}
+.solo-mode .teams{display:none}
+.solo-mode .solo-wrap{display:block}
 
 @media(max-width:480px){
   .ans-grid{grid-template-columns:1fr}
@@ -292,6 +313,11 @@ input::placeholder{color:rgba(255,255,255,.25)}
       <div class="create-inner">
         <div class="create-title">🎯 Elige el tema de la sala</div>
         <div class="topic-grid" id="topic-grid"></div>
+        <div class="create-title" style="margin-top:6px">👥 Modo de juego</div>
+        <div class="mode-grid">
+          <button class="mode-btn sel" id="mode-teams" onclick="selectMode('teams',this)">Con equipos</button>
+          <button class="mode-btn" id="mode-solo" onclick="selectMode('solo',this)">Sin equipos</button>
+        </div>
         <div class="err" id="create-err"></div>
         <button class="btn bg_" id="create-btn" onclick="createRoom()" disabled>🚀 Crear sala</button>
       </div>
@@ -304,7 +330,10 @@ input::placeholder{color:rgba(255,255,255,.25)}
   <div class="wait-header">
     <div class="logo" style="font-size:1.7rem">🎮 TeamKahoot</div>
     <div style="margin:10px 0 6px"><div class="code-badge" id="w-code">──────</div></div>
-    <div><span class="topic-pill" id="w-topic">📚 Tema</span></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <span class="topic-pill" id="w-topic">📚 Tema</span>
+      <span class="mode-pill" id="w-mode">👥 Con equipos</span>
+    </div>
     <p style="color:var(--dim);font-size:.8rem;margin-top:6px">Comparte este código con tus amigos</p>
   </div>
   <div class="teams" id="teams-wrap">
@@ -317,9 +346,16 @@ input::placeholder{color:rgba(255,255,255,.25)}
       <div id="list-b"></div>
     </div>
   </div>
+  <div class="solo-wrap" id="solo-wrap">
+    <div class="tcol solo">
+      <div class="tcol-title solo">👥 Jugadores <span class="tcol-n" id="cnt-solo">0</span></div>
+      <div id="list-solo"></div>
+    </div>
+  </div>
   <div id="host-start-wrap" style="display:none;margin-top:16px;width:100%;max-width:320px">
     <button class="btn bg_" id="start-btn" onclick="startGame()" disabled>▶ Iniciar juego</button>
-    <p style="color:var(--dim);font-size:.75rem;text-align:center;margin-top:8px">Mínimo 2 jugadores</p>
+    <p style="color:var(--dim);font-size:.75rem;text-align:center;margin-top:8px" id="min-players">Mínimo 2 jugadores</p>
+    <button class="btn br" style="margin-top:10px" onclick="endGame()">⏹ Terminar partida</button>
   </div>
   <p class="pulse" id="wait-msg" style="color:var(--dim);font-weight:700;margin-top:18px;font-size:.85rem">
     ⏳ Esperando al anfitrión...
@@ -359,6 +395,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
   </div>
   <div class="host-bar" id="host-q-bar" style="display:none">
     <button class="btn br" onclick="forceResults()">⏹ Ver resultados ahora</button>
+    <button class="btn br" style="margin-top:10px" onclick="endGame()">⏹ Terminar partida</button>
   </div>
 </div>
 
@@ -371,6 +408,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
   <p class="wait-lbl" id="ans-wait">Esperando a otros jugadores...</p>
   <div id="host-ans-bar" style="display:none;margin-top:18px;width:100%;max-width:300px">
     <button class="btn br" onclick="forceResults()">⏹ Ver resultados ahora</button>
+    <button class="btn br" style="margin-top:10px" onclick="endGame()">⏹ Terminar partida</button>
   </div>
 </div>
 
@@ -387,6 +425,7 @@ input::placeholder{color:rgba(255,255,255,.25)}
   <div class="podium" id="podium"></div>
   <div id="host-res-bar" style="display:none;margin-top:14px;width:100%;max-width:340px">
     <button class="btn bc" id="next-q-btn" onclick="nextQuestion()">Siguiente pregunta →</button>
+    <button class="btn br" style="margin-top:10px" onclick="endGame()">⏹ Terminar partida</button>
   </div>
   <p class="next-lbl pulse" id="next-lbl">⏳ Esperando al anfitrión...</p>
 </div>
@@ -592,7 +631,7 @@ function goLobby(){
   show('lobby');
 }
 
-let createOpen=false, selectedTopic=null;
+let createOpen=false, selectedTopic=null, selectedMode='teams';
 function toggleCreate(){
   createOpen=!createOpen;
   document.getElementById('create-panel').classList.toggle('open',createOpen);
@@ -604,6 +643,7 @@ const TOPICS=[
   {id:'html',  name:'HTML',                 icon:'🌐'},
   {id:'js',    name:'JavaScript',           icon:'⚡'},
   {id:'drama', name:'Drama y Exposición',   icon:'🎭'},
+  {id:'safe',  name:'Internet Seguro',      icon:'🛡️'},
 ];
 
 // Preguntas locales para el lobby Drama y Exposición
@@ -630,7 +670,7 @@ const DRAMA_QUESTIONS=[
   {question_text:'¿Cuál afirmación sobre el programa de informática es falsa?',options:['Incluye practicas tecnicas','Tiene alta demanda laboral','No necesita actualizacion','Ofrece varias salidas'],correct:2,time_limit:20},
 ];
 function loadTopics(){
-  const qCount={prog:10,html:10,js:10,drama:20};
+  const qCount={prog:10,html:10,js:10,drama:20,safe:15};
   document.getElementById('topic-grid').innerHTML=TOPICS.map(t=>`
     <div class="topic-card" onclick="selectTopic('${t.id}',this)">
       <div class="topic-icon">${t.icon}</div>
@@ -644,12 +684,17 @@ function selectTopic(id,card){
   selectedTopic=id;
   document.getElementById('create-btn').disabled=false;
 }
+function selectMode(mode,btn){
+  selectedMode=mode==='solo'?'solo':'teams';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('sel'));
+  if(btn) btn.classList.add('sel');
+}
 function createRoom(){
   unlockAudio();
   if(!selectedTopic){setErr('create-err','Elige un tema primero');return}
   if(!S.socket||!S.socket.connected){setErr('create-err','Sin conexión al servidor. Espera un momento y reintenta.');return}
   console.log('[create-room] emitting topicId=',selectedTopic);
-  S.socket.emit('create-room',{topicId:selectedTopic,hostName:S.user.username,userId:S.user.id});
+  S.socket.emit('create-room',{topicId:selectedTopic,mode:selectedMode,hostName:S.user.username,userId:S.user.id});
 }
 function joinRoom(){
   unlockAudio();
@@ -696,7 +741,7 @@ function initApp(){
     S.player=player;S.room=room;S.isHost=true;
     setWaitRoom(room,true);
     show('waiting');
-    const qc = topic?.id==='drama' ? 20 : (questionCount||10);
+    const qc = questionCount||10;
     toast(`✅ Sala ${roomCode} creada — ${qc} preguntas`);
   });
   S.socket.on('joined-room',({player,room})=>{
@@ -705,7 +750,11 @@ function initApp(){
     show('waiting');
   });
   S.socket.on('join-error',({msg})=>setErr('join-err',msg));
-  S.socket.on('player-joined',(d)=>{ updateTeams(d); toast(`👤 ${d.player.username} → Equipo ${d.player.team}`); });
+  S.socket.on('player-joined',(d)=>{
+    updateTeams(d);
+    const teamLabel=d.mode==='solo'?'Sin equipos':`Equipo ${d.player.team}`;
+    toast(`👤 ${d.player.username} → ${teamLabel}`);
+  });
   S.socket.on('player-left',  (d)=>{ updateTeams(d); toast(`❌ ${d.username} abandonó`); });
 
   S.socket.on('countdown-tick',({countdown})=>{
@@ -748,33 +797,53 @@ function initApp(){
 // ════════════════════════════════════════════════════════════
 //  WAITING ROOM
 // ════════════════════════════════════════════════════════════
+function setRoomMode(mode){
+  const m = mode === 'solo' ? 'solo' : 'teams';
+  document.body.classList.toggle('solo-mode', m === 'solo');
+  const teamsWrap=document.getElementById('teams-wrap');
+  const soloWrap=document.getElementById('solo-wrap');
+  if(teamsWrap) teamsWrap.style.display=m==='solo'?'none':'grid';
+  if(soloWrap) soloWrap.style.display=m==='solo'?'block':'none';
+  const mp=document.getElementById('min-players');
+  if(mp) mp.textContent=m==='solo'?'Mínimo 1 jugador':'Mínimo 2 jugadores';
+  const wm=document.getElementById('w-mode');
+  if(wm) wm.textContent=m==='solo'?'👤 Sin equipos':'👥 Con equipos';
+}
 function setWaitRoom(room,isHost){
+  setRoomMode(room?.mode);
   document.getElementById('w-code').textContent=room.code;
   const t=room.topic;
   const topicObj=TOPICS.find(x=>x.id===t.id)||{icon:'🎯'};
   document.getElementById('w-topic').textContent=`${topicObj.icon} ${t.name}`;
-  renderTeams(room.teamA||[],room.teamB||[]);
+  renderTeams(room.teamA||[],room.teamB||[],room.players||[]);
   document.getElementById('host-start-wrap').style.display=isHost?'block':'none';
   document.getElementById('wait-msg').style.display=isHost?'none':'block';
   toggleHostUI(isHost);
   updateStartBtn(room.players||[]);
 }
-function updateTeams(d){ renderTeams(d.teamA||[],d.teamB||[]); updateStartBtn(d.players||[]); }
-function renderTeams(a,b){
-  document.getElementById('cnt-a').textContent=a.length;
-  document.getElementById('cnt-b').textContent=b.length;
+function updateTeams(d){ renderTeams(d.teamA||[],d.teamB||[],d.players||[]); updateStartBtn(d.players||[]); }
+function renderTeams(a,b,players){
   const tpl=p=>`<div class="pi">
     <span style="font-size:1.1rem">${AV[(p.avatar-1)||0]}</span>
     <span class="pn">${esc(p.username)}${p.socketId===S.player?.socketId?' (Tú)':''}</span>
     ${p.isHost?'<span title="Anfitrión">👑</span>':''}
   </div>`;
   const none='<p style="color:var(--dim);font-size:.78rem;text-align:center">Sin jugadores</p>';
+  if(S.room?.mode==='solo'){
+    const list=players||[];
+    document.getElementById('cnt-solo').textContent=list.length;
+    document.getElementById('list-solo').innerHTML=list.length?list.map(tpl).join(''):none;
+    return;
+  }
+  document.getElementById('cnt-a').textContent=a.length;
+  document.getElementById('cnt-b').textContent=b.length;
   document.getElementById('list-a').innerHTML=a.length?a.map(tpl).join(''):none;
   document.getElementById('list-b').innerHTML=b.length?b.map(tpl).join(''):none;
 }
 function updateStartBtn(players){
   const btn=document.getElementById('start-btn');
-  if(btn) btn.disabled=players.length<2;
+  const min = S.room?.mode==='solo' ? 1 : 2;
+  if(btn) btn.disabled=players.length<min;
 }
 function toggleHostUI(isHost){
   ['host-q-bar','host-ans-bar','host-res-bar'].forEach(id=>{
@@ -825,6 +894,10 @@ function showAnswered(isCorrect,points,streak){
   show('answered');
 }
 function forceResults(){ S.socket.emit('force-results',{roomCode:S.room.code}); }
+function endGame(){
+  if(!S.room) return;
+  S.socket.emit('end-game',{roomCode:S.room.code});
+}
 
 // ════════════════════════════════════════════════════════════
 //  RESULTS
@@ -838,7 +911,7 @@ function renderResults(data){
     (data.playerResults||[]).slice(0,5).map((p,i)=>`
       <div class="pod-item">
         <span class="pod-rank">${icons[i]||i+1}</span>
-        <div class="pod-dot" style="background:${TC[p.team]}"></div>
+        <div class="pod-dot" style="background:${TC[p.team]||'var(--gold)'}"></div>
         <span class="pod-name">${esc(p.username)}</span>
         <span class="${p.isCorrect?'chip-ok':'chip-ng'}">${p.isCorrect?'✓ +'+fmt(p.points):'✗'}</span>
         <span class="pod-score">${fmt(p.totalScore)}</span>
@@ -858,27 +931,42 @@ function nextQuestion(){ S.socket.emit('next-question',{roomCode:S.room.code}); 
 //  GAME OVER
 // ════════════════════════════════════════════════════════════
 function renderGameOver(data){
-  const {winner,teamScores,playerResults=[]}=data;
+  const {winner,teamScores,playerResults=[],mode,totalQuestions,winnerPlayer}=data;
+  const isSolo=mode==='solo';
   let trophy='🤝',wt='¡Empate!',sub='Buen juego de ambos equipos';
-  if(winner==='A'){trophy='🏆';wt='¡Equipo A Gana!';sub='⚡ Dominaron la partida'}
-  if(winner==='B'){trophy='🏆';wt='¡Equipo B Gana!';sub='🔥 Dominaron la partida'}
-  if(S.player&&winner===S.player.team) sub='🎉 ¡Eres parte del equipo ganador!';
+  if(isSolo){
+    if(winnerPlayer&&winnerPlayer.username){
+      trophy='🏆';wt=`¡${winnerPlayer.username} Gana!`;sub='Gran partida';
+    } else {
+      trophy='🤝';wt='¡Empate!';sub='Gran partida';
+    }
+  } else {
+    if(winner==='A'){trophy='🏆';wt='¡Equipo A Gana!';sub='⚡ Dominaron la partida'}
+    if(winner==='B'){trophy='🏆';wt='¡Equipo B Gana!';sub='🔥 Dominaron la partida'}
+    if(S.player&&winner===S.player.team) sub='🎉 ¡Eres parte del equipo ganador!';
+  }
   document.getElementById('go-trophy').textContent=trophy;
   document.getElementById('go-winner').textContent=wt;
   document.getElementById('go-sub').textContent=sub;
-  document.getElementById('gs-a').textContent=fmt(teamScores.A);
-  document.getElementById('gs-b').textContent=fmt(teamScores.B);
+  document.getElementById('gs-a').textContent=fmt(teamScores?.A||0);
+  document.getElementById('gs-b').textContent=fmt(teamScores?.B||0);
   document.getElementById('gsc-a').classList.toggle('winner',winner==='A');
   document.getElementById('gsc-b').classList.toggle('winner',winner==='B');
   const icons=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
-  document.getElementById('go-podium').innerHTML=playerResults.slice(0,8).map((p,i)=>`
+  document.getElementById('go-podium').innerHTML=playerResults.slice(0,8).map((p,i)=>{
+    const totalQ = p.totalQuestions ?? totalQuestions ?? 0;
+    const correct = p.correctCount ?? 0;
+    const correctLbl = totalQ ? `${correct}/${totalQ}` : `${correct}`;
+    return `
     <div class="pod-item">
       <span class="pod-rank">${icons[i]||i+1}</span>
-      <div class="pod-dot" style="background:${TC[p.team]}"></div>
+      <div class="pod-dot" style="background:${TC[p.team]||'var(--gold)'}"></div>
       <span style="font-size:1.1rem">${AV[(p.avatar-1)||0]}</span>
       <span class="pod-name">${esc(p.username)}${p.isHost?' 👑':''}</span>
+      <span class="pod-correct">${correctLbl}</span>
       <span class="pod-score">${fmt(p.score)}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function launchConfetti(){
   const w=document.getElementById('confetti');w.innerHTML='';
@@ -896,12 +984,17 @@ function launchConfetti(){
 }
 function goLobby(){
   S.room=null;S.player=null;S.isHost=false;S.answered=false;
-  selectedTopic=null;createOpen=false;
+  selectedTopic=null;createOpen=false;selectedMode='teams';
   document.getElementById('create-panel').classList.remove('open');
   document.getElementById('create-toggle-btn').textContent='✨ Crear Lobby';
   document.getElementById('create-btn').disabled=true;
   document.getElementById('join-code').value='';
   document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('sel'));
+  const def=document.getElementById('mode-teams'); if(def) def.classList.add('sel');
+  document.body.classList.remove('solo-mode');
+  const tw=document.getElementById('teams-wrap'); if(tw) tw.style.display='grid';
+  const sw=document.getElementById('solo-wrap'); if(sw) sw.style.display='none';
   show('lobby');
 }
 </script>

@@ -152,6 +152,23 @@ HARDCODED_QUESTIONS = {
         {'id':'d19', 'question_text':'¿Cuál NO es un ejemplo de herramienta informática cotidiana?', 'answer_options':['Aplicaciones de mensajeria','Redes sociales','Planos de construccion en papel','Plataformas de aprendizaje'], 'correct_answer':2,'time_limit':20},
         {'id':'d20', 'question_text':'¿Cuál afirmación sobre el programa de informática es falsa?', 'answer_options':['Incluye practicas tecnicas','Tiene alta demanda laboral','No necesita actualizacion','Ofrece varias salidas'], 'correct_answer':2,'time_limit':20},
     ],
+    'safe': [
+        {'id':'s1', 'question_text':'¿Qué significa exactamente el término “Internet Seguro”?', 'answer_options':['Usar WiFi gratis sin contraseña','Navegar sin reglas','Usar Internet protegiendo datos y evitando riesgos','No usar redes sociales'], 'correct_answer':2,'time_limit':20},
+        {'id':'s2', 'question_text':'¿Por qué es importante conocer cómo navegar de forma segura en Internet?', 'answer_options':['Para gastar menos datos','Para evitar peligros y proteger información personal','Para tener más seguidores','Para usar Internet más rápido'], 'correct_answer':1,'time_limit':20},
+        {'id':'s3', 'question_text':'¿Qué beneficios obtiene una persona cuando utiliza el Internet de manera responsable?', 'answer_options':['Más virus','Más seguridad y confianza en línea','Internet gratis','Más anuncios'], 'correct_answer':1,'time_limit':20},
+        {'id':'s4', 'question_text':'¿Cómo afecta el uso seguro de Internet a nuestra vida diaria en la escuela y el hogar?', 'answer_options':['No afecta en nada','Hace todo más complicado','Protege información y evita problemas digitales','Solo sirve en la escuela'], 'correct_answer':2,'time_limit':20},
+        {'id':'s5', 'question_text':'¿Qué podría pasar si no practicamos hábitos de seguridad al usar Internet?', 'answer_options':['Nada, todo sigue igual','Podemos ser víctimas de robo de información o estafas','Internet se apaga','Perdemos señal'], 'correct_answer':1,'time_limit':20},
+        {'id':'s6', 'question_text':'¿Cuáles son los peligros más comunes que un joven puede encontrar en Internet?', 'answer_options':['Juegos aburridos','Ciberacoso, estafas y contenido inapropiado','Clases virtuales','Videos educativos'], 'correct_answer':1,'time_limit':20},
+        {'id':'s7', 'question_text':'¿Qué es el ciberacoso y cómo puede afectar a las personas?', 'answer_options':['Un juego online','Molestar a alguien por Internet, causando daño emocional','Un tipo de virus','Un meme'], 'correct_answer':1,'time_limit':20},
+        {'id':'s8', 'question_text':'¿Qué son los virus o malware y cómo llegan a nuestros dispositivos?', 'answer_options':['Programas que mejoran el celular','Archivos peligrosos que entran por descargas o links sospechosos','Aplicaciones oficiales','Juegos normales'], 'correct_answer':1,'time_limit':20},
+        {'id':'s9', 'question_text':'¿Cómo se presentan normalmente los intentos de estafas o engaños en línea?', 'answer_options':['Mensajes urgentes o premios falsos','Tareas escolares','Noticias reales','Correos del colegio'], 'correct_answer':0,'time_limit':20},
+        {'id':'s10', 'question_text':'¿Por qué es importante tener cuidado con hablar con desconocidos en redes sociales?', 'answer_options':['Porque gastan datos','Porque pueden mentir o tener malas intenciones','Porque no responden','Porque aburren'], 'correct_answer':1,'time_limit':20},
+        {'id':'s11', 'question_text':'¿Qué buenas prácticas debemos seguir para proteger nuestra información personal?', 'answer_options':['Compartir todo','Usar contraseñas seguras y no dar datos personales','Publicar ubicación siempre','Aceptar a todos'], 'correct_answer':1,'time_limit':20},
+        {'id':'s12', 'question_text':'¿Por qué es importante usar contraseñas fuertes y no compartirlas?', 'answer_options':['Para no olvidarlas','Para evitar accesos no autorizados','Para que sean bonitas','Para escribir más'], 'correct_answer':1,'time_limit':20},
+        {'id':'s13', 'question_text':'¿Qué herramientas ayudan a mantener nuestros dispositivos seguros?', 'answer_options':['Antivirus y actualizaciones','Juegos','Música','Redes sociales'], 'correct_answer':0,'time_limit':20},
+        {'id':'s14', 'question_text':'¿Qué debemos hacer si creemos que nuestra cuenta ha sido hackeada?', 'answer_options':['Ignorarlo','Cambiar contraseña y avisar a soporte','Crear otra cuenta','Apagar el celular'], 'correct_answer':1,'time_limit':20},
+        {'id':'s15', 'question_text':'¿Cómo podemos enseñar a otros a usar Internet de forma segura?', 'answer_options':['No decir nada','Compartiendo consejos y dando buen ejemplo','Criticando','Ignorando'], 'correct_answer':1,'time_limit':20},
+    ],
 }
 
 HARDCODED_TOPICS = {
@@ -159,6 +176,7 @@ HARDCODED_TOPICS = {
     'html': {'id':'html','name':'HTML','icon_code':1},
     'js':   {'id':'js',  'name':'JavaScript','icon_code':2},
     'drama':{'id':'drama','name':'Drama y Exposición','icon_code':1},
+    'safe': {'id':'safe','name':'Internet Seguro','icon_code':1},
 }
 
 def get_questions(topic_id):
@@ -178,6 +196,7 @@ def room_pub(room):
         'teamA': [p for p in players if p['team'] == 'A'],
         'teamB': [p for p in players if p['team'] == 'B'],
         'players': players,
+        'mode': room.get('mode', 'teams'),
         'state': room['state'],
     }
 
@@ -295,6 +314,7 @@ def on_disconnect():
 @socketio.on('create-room')
 def on_create_room(data):
     topic_id = data.get('topicId')
+    mode = 'solo' if str(data.get('mode')) == 'solo' else 'teams'
     host_name = (data.get('hostName') or 'Anfitrion').strip()
     user_id = data.get('userId')
 
@@ -312,11 +332,13 @@ def on_create_room(data):
         'socketId': request.sid, 'userId': user_id,
         'username': host_name, 'team': None,
         'score': 0, 'streak': 0, 'avatar': avatar, 'isHost': True,
+        'correct_count': 0,
     }
     rooms[code] = {
         'code': code, 'topic': topic, 'questions': questions,
         'host_sid': request.sid, 'host_name': host_name,
         'host_user_id': user_id,
+        'mode': mode,
         'players': {request.sid: player},
         'state': 'waiting',
         'current_idx': -1, 'current_q': None,
@@ -342,12 +364,13 @@ def on_join_room(data):
     if room['state'] != 'waiting':
         emit('join-error', {'msg': 'La sala no está disponible'}); return
 
-    team = next_team(room)
+    team = None if room.get('mode') == 'solo' else next_team(room)
     avatar = random.randint(1, 8)
     player = {
         'socketId': request.sid, 'userId': user_id,
         'username': username, 'team': team,
         'score': 0, 'streak': 0, 'avatar': avatar, 'isHost': False,
+        'correct_count': 0,
     }
     room['players'][request.sid] = player
     join_room(code)
@@ -361,8 +384,9 @@ def on_start_game(data):
     room = rooms.get(code)
     if not room or request.sid != room['host_sid']:
         emit('error', {'msg': 'No autorizado'}); return
-    if len(_active_players(room)) < 2:
-        emit('error', {'msg': 'Mínimo 2 jugadores'}); return
+    min_players = 1 if room.get('mode') == 'solo' else 2
+    if len(_active_players(room)) < min_players:
+        emit('error', {'msg': f'Mínimo {min_players} jugador(es)'}); return
     
     room['state'] = 'countdown'
     socketio.emit('countdown-tick', {'countdown': 3}, to=code)
@@ -400,12 +424,14 @@ def on_submit_answer(data):
     if is_correct:
         player['streak'] += 1
         points += player['streak'] * 50
+        player['correct_count'] = player.get('correct_count', 0) + 1
     else:
         player['streak'] = 0
     
     player['score'] += points
     team = player['team']
-    room['team_scores'][team] += points
+    if room.get('mode') == 'teams' and team in room['team_scores']:
+        room['team_scores'][team] += points
     
     room['q_answers'][request.sid] = {'answerIndex': ans_idx, 'isCorrect': is_correct, 'points': points}
     
@@ -433,6 +459,15 @@ def on_force_results(data):
     if request.sid == room['host_sid']:
         room['timer_cancel'] = True
         do_show_results(code)
+
+@socketio.on('end-game')
+def on_end_game(data):
+    code = data.get('roomCode')
+    room = rooms.get(code)
+    if not room or request.sid != room['host_sid']:
+        emit('error', {'msg': 'No autorizado'}); return
+    room['timer_cancel'] = True
+    end_game(code, force=True)
 
 def send_question(code):
     room = rooms.get(code)
@@ -487,17 +522,33 @@ def do_show_results(code):
         'totalQuestions': len(room['questions']),
     }, to=code)
 
-def end_game(code):
+def _played_questions(room):
+    if room.get('current_idx', -1) < 0:
+        return 0
+    return min(room['current_idx'] + 1, len(room['questions']))
+
+def end_game(code, force=False):
     room = rooms.get(code)
     if not room: return
     room['state'] = 'gameover'
     room['timer_cancel'] = True
+    mode = room.get('mode', 'teams')
     s = room['team_scores']
-    winner = 'A' if s['A'] > s['B'] else ('B' if s['B'] > s['A'] else 'DRAW')
     players = sorted(_active_players(room), key=lambda p: -p['score'])
+    total_questions = len(room['questions']) if not force else _played_questions(room)
+    winner = 'DRAW'
+    winner_player = None
+    if mode == 'teams':
+        winner = 'A' if s['A'] > s['B'] else ('B' if s['B'] > s['A'] else 'DRAW')
+    else:
+        if players:
+            top = players[0]
+            tied = len(players) > 1 and players[1]['score'] == top['score']
+            if not tied:
+                winner_player = {'username': top['username'], 'socketId': top['socketId']}
 
     try:
-        wc = 1 if winner == 'A' else (2 if winner == 'B' else 0)
+        wc = 1 if (mode == 'teams' and winner == 'A') else (2 if (mode == 'teams' and winner == 'B') else 0)
         host_uid = room.get('host_user_id')
 
         conn = get_db()
@@ -505,17 +556,20 @@ def end_game(code):
             with conn.cursor() as cur:
                 cur.execute(
                     'INSERT INTO game_sessions (room_code, topic_id, host_user_id, host_name, total_questions, team_a_score, team_b_score, winner_team, player_count, ended_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())',
-                    (code, room['topic']['id'], host_uid, room['host_name'], len(room['questions']), s['A'], s['B'], wc, len(players))
+                    (code, room['topic']['id'], host_uid, room['host_name'], total_questions, s['A'], s['B'], wc, len(players))
                 )
                 sess_id = cur.lastrowid
                 for p in players:
-                    team_num = 1 if p['team'] == 'A' else 2
+                    team_num = 0 if mode == 'solo' else (1 if p['team'] == 'A' else 2)
                     cur.execute(
                         'INSERT INTO session_players (session_id, user_id, guest_name, team, final_score, is_host) VALUES (%s,%s,%s,%s,%s,%s)',
                         (sess_id, p['userId'], None if p['userId'] else p['username'], team_num, p['score'], 0)
                     )
                     if p['userId']:
-                        won = 1 if p['team'] == winner else 0
+                        if mode == 'solo':
+                            won = 1 if winner_player and p['socketId'] == winner_player['socketId'] else 0
+                        else:
+                            won = 1 if p['team'] == winner else 0
                         cur.execute('UPDATE users SET games_played=games_played+1, games_won=games_won+%s, total_score=total_score+%s WHERE id=%s', (won, p['score'], p['userId']))
                 conn.commit()
         finally:
@@ -524,8 +578,13 @@ def end_game(code):
         print(f'[DB] Error: {e}')
 
     socketio.emit('game-over', {
-        'winner': winner, 'teamScores': s,
-        'playerResults': [{'username': p['username'], 'team': p['team'], 'avatar': p['avatar'], 'score': p['score'], 'isHost': p['isHost']} for p in players],
+        'winner': winner, 'teamScores': s, 'mode': mode, 'totalQuestions': total_questions,
+        'winnerPlayer': winner_player,
+        'playerResults': [{
+            'username': p['username'], 'team': p['team'], 'avatar': p['avatar'],
+            'score': p['score'], 'isHost': p['isHost'],
+            'correctCount': p.get('correct_count', 0), 'totalQuestions': total_questions,
+        } for p in players],
     }, to=code)
 
     def _clean(c=code):
