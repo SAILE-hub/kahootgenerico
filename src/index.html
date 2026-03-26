@@ -513,6 +513,13 @@ function unlockAudio(){
     const ctx=getAudioCtx();
     if(ctx.state==='suspended') ctx.resume();
     _audioUnlocked=true;
+    // iOS/Safari: play a tiny silent tone to fully unlock
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    g.gain.value=0.0001;
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime+0.02);
   }catch(e){}
 }
 function playTone(freq,dur,type='sine',gain=0.06){
@@ -562,6 +569,10 @@ function sfxGameOver(winner){
   if(winner===S.player.team) sfxWin(); else sfxLose();
 }
 
+// Unlock audio on first user gesture (mobile friendly)
+window.addEventListener('touchstart', unlockAudio, {once:true,passive:true});
+window.addEventListener('mousedown', unlockAudio, {once:true,passive:true});
+
 // ════════════════════════════════════════════════════════════
 //  AUTH
 // ════════════════════════════════════════════════════════════
@@ -574,7 +585,7 @@ function doGuest(){
 }
 
 // ════════════════════════════════════════════════════════════
-//  LOBBY
+//  LOBBY 1
 // ════════════════════════════════════════════════════════════
 function goLobby(){
   document.getElementById('lob-welcome').textContent=`👋 Hola, ${S.user.username}!`;
